@@ -122,7 +122,7 @@
   .empty-state { text-align: center; padding: 60px 20px; color: var(--fb-text-secondary); }
   .empty-state .icon { font-size: 64px; margin-bottom: 16px; }
   
-  .settings-panel { position: fixed; bottom: 60px; left: 260px; background: #fff; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); padding: 16px; z-index: 50; min-width: 220px; }
+  .settings-panel { position: fixed; bottom: 60px; left: 260px; background: #fff; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); padding: 16px; z-index: 50; min-width: 200px; }
   
   /* Summary Grid Card Styles */
   .summary-grid-item { background: #fff; border-radius: 8px; padding: 12px; border-left: 4px solid var(--warning); box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: all 0.2s; }
@@ -163,7 +163,11 @@
   .loading-screen .spinner { width: 48px; height: 48px; border: 4px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
   
-  /* Config Setup Page */
+  /* Config Required Warning */
+  .config-warning { background: #fff3cd; color: #856404; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px; }
+  .config-warning a { color: #856404; text-decoration: underline; font-weight: 600; }
+  
+  /* Config Setup Page - Built-in Settings */
   .config-setup-page { min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; padding: 20px; }
   .config-setup-card { background: #fff; border-radius: 16px; padding: 32px; max-width: 550px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
   .config-setup-card h2 { margin: 0 0 8px 0; font-size: 24px; color: var(--fb-text); display: flex; align-items: center; gap: 10px; }
@@ -171,7 +175,6 @@
   .config-field { margin-bottom: 16px; }
   .config-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--fb-text); }
   .config-field .hint { font-size: 11px; color: var(--fb-text-secondary); margin-top: 4px; }
-  .config-divider { border-top: 1px solid var(--fb-border); margin: 24px 0; padding-top: 16px; }
 </style>
 </head>
 <body>
@@ -251,16 +254,6 @@ const getFirebaseConfig = () => {
   } catch {
     return null;
   }
-};
-
-// Save Firebase config
-const saveFirebaseConfig = (config) => {
-  localStorage.setItem('gibikey_firebase_config', JSON.stringify(config));
-};
-
-// Clear Firebase config
-const clearFirebaseConfig = () => {
-  localStorage.removeItem('gibikey_firebase_config');
 };
 
 // Firebase database reference
@@ -435,21 +428,15 @@ function ConfigSetup({ onSave, existingConfig }) {
     setTestResult(null);
 
     try {
-      // Test Firebase initialization
       if (firebase.apps.length) {
         await firebase.app().delete();
       }
-      
       firebase.initializeApp(config);
       const db = firebase.database();
-      
-      // Test read
       await db.ref('.info/connected').once('value');
-      
       setTestResult({ success: true, message: 'Koneksi berhasil!' });
       showToast('Koneksi Firebase berhasil!', 'success');
     } catch (e) {
-      console.error('Test error:', e);
       setTestResult({ success: false, message: e.message });
       showToast('Koneksi gagal: ' + e.message, 'error');
     } finally {
@@ -462,136 +449,66 @@ function ConfigSetup({ onSave, existingConfig }) {
       showToast('API Key dan Database URL wajib diisi!', 'error');
       return;
     }
-    
-    saveFirebaseConfig(config);
+    localStorage.setItem('gibikey_firebase_config', JSON.stringify(config));
     showToast('Konfigurasi disimpan!', 'success');
-    setTimeout(() => {
-      onSave(config);
-    }, 500);
+    setTimeout(() => onSave(config), 500);
   };
 
   return (
     <div className="config-setup-page">
       <div className="config-setup-card">
         <h2>☁️ Setup Firebase</h2>
-        <p className="subtitle">
-          Masukkan konfigurasi Firebase dari Firebase Console Anda. 
-          Data ini akan disimpan di localStorage browser dan tidak dikirim ke server manapun.
-        </p>
+        <p className="subtitle">Masukkan konfigurasi Firebase dari Firebase Console Anda.</p>
 
         <div className="config-field">
           <label>API Key *</label>
-          <input
-            type="text"
-            className="fb-input"
-            placeholder="AIzaSy..."
-            value={config.apiKey}
-            onChange={(e) => handleChange('apiKey', e.target.value)}
-          />
-          <div className="hint">Dari Project Settings → General → Your apps</div>
+          <input type="text" className="fb-input" placeholder="AIzaSy..." value={config.apiKey} onChange={(e) => handleChange('apiKey', e.target.value)} />
         </div>
 
         <div className="config-field">
           <label>Auth Domain</label>
-          <input
-            type="text"
-            className="fb-input"
-            placeholder="your-project.firebaseapp.com"
-            value={config.authDomain}
-            onChange={(e) => handleChange('authDomain', e.target.value)}
-          />
+          <input type="text" className="fb-input" placeholder="your-project.firebaseapp.com" value={config.authDomain} onChange={(e) => handleChange('authDomain', e.target.value)} />
         </div>
 
         <div className="config-field">
           <label>Database URL *</label>
-          <input
-            type="text"
-            className="fb-input"
-            placeholder="https://your-project-default-rtdb.firebaseio.com"
-            value={config.databaseURL}
-            onChange={(e) => handleChange('databaseURL', e.target.value)}
-          />
-          <div className="hint">URL dari Realtime Database (bukan Cloud Storage)</div>
+          <input type="text" className="fb-input" placeholder="https://your-project-default-rtdb.firebaseio.com" value={config.databaseURL} onChange={(e) => handleChange('databaseURL', e.target.value)} />
+          <div className="hint">URL dari Realtime Database</div>
         </div>
 
         <div className="config-field">
           <label>Project ID</label>
-          <input
-            type="text"
-            className="fb-input"
-            placeholder="your-project-id"
-            value={config.projectId}
-            onChange={(e) => handleChange('projectId', e.target.value)}
-          />
+          <input type="text" className="fb-input" placeholder="your-project-id" value={config.projectId} onChange={(e) => handleChange('projectId', e.target.value)} />
         </div>
 
         <div className="config-field">
           <label>Storage Bucket</label>
-          <input
-            type="text"
-            className="fb-input"
-            placeholder="your-project.appspot.com"
-            value={config.storageBucket}
-            onChange={(e) => handleChange('storageBucket', e.target.value)}
-          />
+          <input type="text" className="fb-input" placeholder="your-project.appspot.com" value={config.storageBucket} onChange={(e) => handleChange('storageBucket', e.target.value)} />
         </div>
 
         <div className="config-field">
           <label>Messaging Sender ID</label>
-          <input
-            type="text"
-            className="fb-input"
-            placeholder="123456789"
-            value={config.messagingSenderId}
-            onChange={(e) => handleChange('messagingSenderId', e.target.value)}
-          />
+          <input type="text" className="fb-input" placeholder="123456789" value={config.messagingSenderId} onChange={(e) => handleChange('messagingSenderId', e.target.value)} />
         </div>
 
         <div className="config-field">
           <label>App ID</label>
-          <input
-            type="text"
-            className="fb-input"
-            placeholder="1:123456789:web:abc123"
-            value={config.appId}
-            onChange={(e) => handleChange('appId', e.target.value)}
-          />
+          <input type="text" className="fb-input" placeholder="1:123456789:web:abc123" value={config.appId} onChange={(e) => handleChange('appId', e.target.value)} />
         </div>
 
         {testResult && (
-          <div style={{ 
-            padding: '12px', 
-            borderRadius: '8px', 
-            marginBottom: '16px',
-            background: testResult.success ? '#d4edda' : '#f8d7da',
-            color: testResult.success ? '#155724' : '#721c24'
-          }}>
+          <div style={{ padding: '12px', borderRadius: '8px', marginBottom: '16px', background: testResult.success ? '#d4edda' : '#f8d7da', color: testResult.success ? '#155724' : '#721c24' }}>
             {testResult.success ? '✅' : '❌'} {testResult.message}
           </div>
         )}
 
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <button 
-            className="fb-btn fb-btn-secondary" 
-            onClick={handleTest}
-            disabled={testing}
-          >
+          <button className="fb-btn fb-btn-secondary" onClick={handleTest} disabled={testing}>
             {testing ? '⏳ Testing...' : '🔍 Test Koneksi'}
           </button>
-          <button 
-            className="fb-btn fb-btn-success" 
-            onClick={handleSave}
-          >
+          <button className="fb-btn fb-btn-success" onClick={handleSave}>
             💾 Simpan & Mulai
           </button>
-        </div>
-
-        <div className="config-divider">
-          <p style={{ fontSize: '12px', color: 'var(--fb-text-secondary)', margin: 0 }}>
-            <strong>Keamanan:</strong> API key Anda disimpan di localStorage browser ini saja. 
-            Tidak ada data yang dikirim ke server pihak ketiga. 
-            Jika cache dihapus, Anda perlu input ulang konfigurasi ini.
-          </p>
         </div>
       </div>
       {toast}
@@ -602,7 +519,7 @@ function ConfigSetup({ onSave, existingConfig }) {
 // ========== MAIN APP ==========
 function App() {
   const [navOpen, setNavOpen] = useState(false);
-  const [showToast, toast] = useToast();
+  const [toast, showToast] = useToast();
   const [showSettings, setShowSettings] = useState(false);
   const [showFirebaseSettings, setShowFirebaseSettings] = useState(false);
   
@@ -645,7 +562,7 @@ function App() {
   const [showTemplateManager, setShowTemplateManager] = useState(false);
   
   // ========== INITIALIZE FIREBASE ==========
-  const initializeApp = useCallback(() => {
+  useEffect(() => {
     const config = getFirebaseConfig();
     setHasConfig(!!config && !!config.apiKey);
     
@@ -710,19 +627,6 @@ function App() {
       unsubConn();
     };
   }, []);
-
-  useEffect(() => {
-    initializeApp();
-  }, [initializeApp]);
-  
-  // ========== HANDLE CONFIG SAVE ==========
-  const handleConfigSave = (config) => {
-    setHasConfig(true);
-    setIsLoading(true);
-    setShowFirebaseSettings(false);
-    // Reload the app
-    window.location.reload();
-  };
   
   // ========== PERSIST TO CLOUD ==========
   useEffect(() => {
@@ -1215,35 +1119,6 @@ function App() {
     });
   };
 
-  // ========== RENDER CONFIG SETUP IF NO CONFIG ==========
-  if (!isLoading && !hasConfig) {
-    return <ConfigSetup onSave={handleConfigSave} existingConfig={null} />;
-  }
-
-  // ========== RENDER FIREBASE SETTINGS MODAL ==========
-  const renderFirebaseSettingsModal = () => {
-    if (!showFirebaseSettings) return null;
-    
-    const existingConfig = getFirebaseConfig();
-    
-    return (
-      <div className="modal-overlay" onClick={() => setShowFirebaseSettings(false)}>
-        <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '550px' }}>
-          <div className="modal-header">
-            <h3 className="modal-title">☁️ Pengaturan Firebase</h3>
-            <button onClick={() => setShowFirebaseSettings(false)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer' }}>×</button>
-          </div>
-          <div className="modal-body">
-            <ConfigSetup 
-              onSave={handleConfigSave} 
-              existingConfig={existingConfig}
-            />
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="min-h-screen">
       {/* Loading Screen */}
@@ -1253,6 +1128,14 @@ function App() {
           <h2 style={{ marginTop: 20 }}>Menghubungkan ke Cloud...</h2>
           <p style={{ opacity: 0.8, marginTop: 8 }}>Gibikey Rich v2.5</p>
         </div>
+      )}
+      
+      {/* No Config - Show Setup Page */}
+      {!isLoading && !hasConfig && (
+        <ConfigSetup onSave={(config) => {
+          setHasConfig(true);
+          window.location.reload();
+        }} />
       )}
       
       {/* Main App - only show when not loading and has config */}
@@ -1312,800 +1195,373 @@ function App() {
             <>
               <div className="backdrop" onClick={() => setShowSettings(false)} style={{ zIndex: 49 }} />
               <div className="settings-panel">
-                <h4 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Pengaturan</h4>
-                
-                {/* Firebase Settings Button */}
-                <button 
-                  className="fb-btn fb-btn-purple" 
-                  style={{ width: '100%', fontSize: 12, padding: '8px', marginBottom: 8 }}
-                  onClick={() => {
-                    setShowSettings(false);
-                    setShowFirebaseSettings(true);
-                  }}
-                >
-                  ☁️ Ubah Config Firebase
-                </button>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: 14, fontWeight: 600 }}>Pengaturan</h4>
+            
+            {/* Firebase Settings Button */}
+            <button 
+              className="fb-btn fb-btn-purple" 
+              style={{ width: '100%', fontSize: 12, padding: '8px', marginBottom: 8 }}
+              onClick={() => {
+                setShowSettings(false);
+                setShowFirebaseSettings(true);
+              }}
+            >
+              ☁️ Ubah Config Firebase
+            </button>
+            
+            <button 
+              className="fb-btn fb-btn-success" 
+              style={{ width: '100%', fontSize: 12, padding: '8px', marginBottom: 8 }}
+              onClick={() => {
+                const data = {
+                  version: '2.5-cloud',
+                  exportedAt: new Date().toISOString(),
+                  userId: getUserId(),
+                  period: period,
+                  incomes: incomes,
+                  templates: templates,
+                  savedSimulations: savedSimulations,
+                  simBills: simBills,
+                  tagihan: tagihan,
+                  bukuPeriode: bukuPeriode
+                };
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `gibikey_backup_${iso(new Date())}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showToast('Data berhasil disimpan!', 'success');
+              }}
+            >
+              💾 save-as
+            </button>
 
-                <button 
-                  className="fb-btn fb-btn-success" 
-                  style={{ width: '100%', fontSize: 12, padding: '8px', marginBottom: 8 }}
-                  onClick={() => {
-                    const data = {
-                      version: '2.5-cloud',
-                      exportedAt: new Date().toISOString(),
-                      userId: getUserId(),
-                      period: period,
-                      incomes: incomes,
-                      templates: templates,
-                      savedSimulations: savedSimulations,
-                      simBills: simBills,
-                      tagihan: tagihan,
-                      bukuPeriode: bukuPeriode
-                    };
-                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `gibikey_backup_${iso(new Date())}.json`;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    showToast('Data berhasil diekspor!', 'success');
-                  }}
-                >
-                  💾 Ekspor Data
-                </button>
-
-                <label style={{ display: 'block' }}>
-                  <button 
-                    className="fb-btn" 
-                    style={{ width: '100%', fontSize: 12, padding: '8px', marginBottom: 8 }}
-                    onClick={() => document.getElementById('import-file').click()}
-                  >
-                    📥 Impor Data
-                  </button>
-                  <input 
-                    type="file" 
-                    id="import-file" 
-                    accept=".json" 
-                    style={{ display: 'none' }}
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = (evt) => {
-                        try {
-                          const data = JSON.parse(evt.target.result);
-                          if (data.period) setPeriod(data.period);
-                          if (data.incomes) setIncomes(data.incomes);
-                          if (data.templates) setTemplates(data.templates);
-                          if (data.savedSimulations) setSavedSimulations(data.savedSimulations);
-                          if (data.simBills) setSimBills(data.simBills);
-                          if (data.tagihan) setTagihan(data.tagihan);
-                          if (data.bukuPeriode) setBukuPeriode(data.bukuPeriode);
-                          showToast('Data berhasil diimpor!', 'success');
-                        } catch (err) {
-                          showToast('File JSON tidak valid!', 'error');
-                        }
-                      };
-                      reader.readAsText(file);
-                      e.target.value = '';
-                    }}
-                  />
-                </label>
-
-                <button 
-                  className="fb-btn fb-btn-danger" 
-                  style={{ width: '100%', fontSize: 12, padding: '8px' }}
-                  onClick={() => {
-                    if (confirm('Hapus semua data lokal? Data di cloud tidak terpengaruh.')) {
-                      localStorage.removeItem('gibikey_user_id');
-                      window.location.reload();
+            <label style={{ display: 'block' }}>
+              <button 
+                className="fb-btn" 
+                style={{ width: '100%', fontSize: 12, padding: '8px', marginBottom: 8 }}
+                onClick={() => document.getElementById('import-file').click()}
+              >
+                📥 donlot
+              </button>
+              <input 
+                type="file" 
+                id="import-file" 
+                accept=".json" 
+                style={{ display: 'none' }}
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = (evt) => {
+                    try {
+                      const data = JSON.parse(evt.target.result);
+                      if (data.period) setPeriod(data.period);
+                      if (data.incomes) setIncomes(data.incomes);
+                      if (data.templates) setTemplates(data.templates);
+                      if (data.savedSimulations) setSavedSimulations(data.savedSimulations);
+                      if (data.simBills) setSimBills(data.simBills);
+                      if (data.tagihan) setTagihan(data.tagihan);
+                      if (data.bukuPeriode) setBukuPeriode(data.bukuPeriode);
+                      showToast('Data berhasil dimuat!', 'success');
+                    } catch (err) {
+                      showToast('File JSON tidak valid!', 'error');
                     }
-                  }}
-                >
-                  🗑 Reset User ID
-                </button>
-              </div>
-            </>
-          )}
+                  };
+                  reader.readAsText(file);
+                  e.target.value = '';
+                }}
+              />
+            </label>
 
-          {/* Main Content */}
-          <main className="main-content">
-            {/* Budget Tab Content */}
-            {sidebarTab === 'budget' && (
-              <div style={{ padding: 20, maxWidth: 1200, margin: '0 auto' }}>
-                {/* Header with Sub-tabs */}
-                <div className="header-bar" style={{ margin: -20, marginBottom: 20, padding: 16 }}>
-                  <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                      <h2 style={{ margin: 0, fontSize: 24 }}>📊 Budget Manager</h2>
-                      {subTab === 'simulasi' && (
-                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                          <button className="fb-btn fb-btn-purple" onClick={() => setShowTemplateManager(true)}>
-                            📋 Template
-                          </button>
-                          <button className="fb-btn fb-btn-warning" onClick={() => {
-                            const name = prompt('Nama simulasi:', `Simulasi ${savedSimulations.length + 1}`);
-                            if (name) saveSimulation(name);
-                          }}>
-                            💾 Simpan
-                          </button>
-                          <button className="fb-btn fb-btn-danger" onClick={clearAllSimBills}>
-                            🗑 Hapus Simulasi
-                          </button>
-                          <button className="fb-btn fb-btn-success" onClick={generateToTagihan}>
-                            🚀 Generate Tagihan
-                          </button>
-                        </div>
-                      )}
-                      {subTab === 'kalender' && (
-                        <button className="fb-btn fb-btn-purple" onClick={tutupBukuPeriode}>
-                          📕 Tutup Buku Periode
-                        </button>
-                      )}
-                    </div>
+            <button 
+              className="fb-btn fb-btn-danger" 
+              style={{ width: '100%', fontSize: 12, padding: '8px' }}
+              onClick={() => {
+                if (confirm('Hapus semua data?')) {
+                  localStorage.clear();
+                  window.location.reload();
+                }
+              }}
+            >
+              🗑 Reset Data
+            </button>
+          </div>
+        </>
+      )}
 
-                    {/* Sub-tabs */}
-                    <div className="sub-tabs">
-                      <button className={`sub-tab ${subTab === 'simulasi' ? 'active' : ''}`} onClick={() => setSubTab('simulasi')}>
-                        📝 Simulasi
+      {/* Main Content */}
+      <main className="main-content">
+        {/* Budget Tab Content */}
+        {sidebarTab === 'budget' && (
+          <div style={{ padding: 20, maxWidth: 1200, margin: '0 auto' }}>
+            {/* Header with Sub-tabs */}
+            <div className="header-bar" style={{ margin: -20, marginBottom: 20, padding: 16 }}>
+              <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                  <h2 style={{ margin: 0, fontSize: 24 }}>📊 Budget Manager</h2>
+                  {subTab === 'simulasi' && (
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <button className="fb-btn fb-btn-purple" onClick={() => setShowTemplateManager(true)}>
+                        📋 Template
                       </button>
-                      <button className={`sub-tab ${subTab === 'kalender' ? 'active' : ''}`} onClick={() => setSubTab('kalender')}>
-                        📅 Kalender
+                      <button className="fb-btn fb-btn-warning" onClick={() => {
+                        const name = prompt('Nama simulasi:', `Simulasi ${savedSimulations.length + 1}`);
+                        if (name) saveSimulation(name);
+                      }}>
+                        💾 Simpan
                       </button>
-                      <button className={`sub-tab ${subTab === 'buku-periode' ? 'active' : ''}`} onClick={() => setSubTab('buku-periode')}>
-                        📕 Buku Periode
+                      <button className="fb-btn fb-btn-danger" onClick={clearAllSimBills}>
+                        🗑 Hapus Simulasi
+                      </button>
+                      <button className="fb-btn fb-btn-success" onClick={generateToTagihan}>
+                        🚀 Generate Tagihan
                       </button>
                     </div>
-
-                    {/* Period Selector & Summary */}
-                    <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', marginBottom: 16 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <label style={{ fontSize: 13, fontWeight: 500 }}>Periode:</label>
-                        <input type="date" className="fb-input" style={{ width: 140 }} value={period.start} onChange={(e) => setPeriod({ ...period, start: e.target.value })} />
-                        <span>-</span>
-                        <input type="date" className="fb-input" style={{ width: 140 }} value={period.end} onChange={(e) => setPeriod({ ...period, end: e.target.value })} />
-                      </div>
-                    </div>
-
-                    {/* Summary Cards - Sticky inside header */}
-                    <div className="summary-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-                      <div>
-                        <div style={{ fontSize: 12, opacity: 0.8 }}>Total Pemasukan</div>
-                        <div style={{ fontSize: 20, fontWeight: 700 }}>{fmt(totalIncome)}</div>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: 12, opacity: 0.8 }}>{subTab === 'kalender' ? 'Total Tagihan' : 'Simulasi Tagihan'}</div>
-                        <div style={{ fontSize: 20, fontWeight: 700 }}>{subTab === 'kalender' ? fmt(totalTagihan + totalPaid) : fmt(totalSimBills)}</div>
-                      </div>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: 12, opacity: 0.8 }}>Sisa</div>
-                        <div style={{ fontSize: 20, fontWeight: 700 }}>{fmt(totalIncome - (subTab === 'kalender' ? totalTagihan : totalSimBills))}</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Content based on sub-tab */}
-                {subTab === 'simulasi' && (
-                  <div>
-                    {/* Income Section */}
-                    <div className="fb-card" style={{ padding: 16, marginBottom: 20 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                        <h3 style={{ margin: 0, fontSize: 16 }}>💰 Pemasukan</h3>
-                        <button className="fb-btn fb-btn-success" onClick={addIncome}>+ Tambah</button>
-                      </div>
-                      {incomes.length === 0 ? (
-                        <p style={{ color: 'var(--fb-text-secondary)', textAlign: 'center', padding: 20 }}>Belum ada pemasukan. Klik "+ Tambah" untuk menambahkan.</p>
-                      ) : (
-                        <div className="grid-container">
-                          {incomes.map(inc => (
-                            <div key={inc.id} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                              <input
-                                type="text"
-                                className="fb-input"
-                                placeholder="Nama pemasukan"
-                                value={inc.name}
-                                onChange={(e) => updateIncome(inc.id, { name: e.target.value })}
-                                style={{ flex: 1 }}
-                              />
-                              <input
-                                type="number"
-                                className="fb-input"
-                                placeholder="0"
-                                value={inc.amount || ''}
-                                onChange={(e) => updateIncome(inc.id, { amount: Number(e.target.value) })}
-                                style={{ width: 140 }}
-                              />
-                              <button
-                                onClick={() => removeIncome(inc.id)}
-                                style={{ background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', fontSize: 18 }}
-                              >
-                                🗑
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Saved Simulations */}
-                    {savedSimulations.length > 0 && (
-                      <div className="fb-card" style={{ padding: 16, marginBottom: 20 }}>
-                        <h3 style={{ margin: '0 0 12px 0', fontSize: 16 }}>💾 Simulasi Tersimpan</h3>
-                        {savedSimulations.map(sim => (
-                          <div key={sim.id} className="saved-sim-card">
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <div>
-                                <div style={{ fontWeight: 600 }}>{sim.name}</div>
-                                <div style={{ fontSize: 12, color: 'var(--fb-text-secondary)' }}>
-                                  {sim.bills?.length || 0} tagihan • Dibuat: {new Date(sim.createdAt).toLocaleDateString('id-ID')}
-                                </div>
-                              </div>
-                              <div style={{ display: 'flex', gap: 8 }}>
-                                <button className="fb-btn fb-btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => loadSimulation(sim.id)}>
-                                  📂 Muat
-                                </button>
-                                <button className="fb-btn fb-btn-warning" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => updateSavedSimulation(sim.id)}>
-                                  💾 Update
-                                </button>
-                                <button className="fb-btn fb-btn-danger" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => deleteSimulation(sim.id)}>
-                                  🗑
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Simulation Bills Section */}
-                    <div className="fb-card" style={{ padding: 16, marginBottom: 20 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                        <h3 style={{ margin: 0, fontSize: 16 }}>📝 Simulasi Tagihan</h3>
-                        <button className="fb-btn" onClick={() => setEditingSimBill({})}>+ Tambah Tagihan</button>
-                      </div>
-                      
-                      {simBills.length === 0 ? (
-                        <p style={{ color: 'var(--fb-text-secondary)', textAlign: 'center', padding: 20 }}>Belum ada simulasi tagihan. Klik "+ Tambah Tagihan" atau gunakan Template.</p>
-                      ) : (
-                        <>
-                          {/* Summary Grid 5 kolom */}
-                          <div className="grid-5-cols" style={{ marginBottom: 16 }}>
-                            <div className="summary-grid-item">
-                              <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Total Tagihan</div>
-                              <div style={{ fontSize: 16, fontWeight: 700 }}>{fmt(totalSimBills)}</div>
-                            </div>
-                            <div className="summary-grid-item">
-                              <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Jumlah Item</div>
-                              <div style={{ fontSize: 16, fontWeight: 700 }}>{simBillsCount}</div>
-                            </div>
-                            <div className="summary-grid-item">
-                              <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Sisa</div>
-                              <div style={{ fontSize: 16, fontWeight: 700, color: totalIncome - totalSimBills >= 0 ? 'var(--fb-green)' : 'var(--danger)' }}>{fmt(totalIncome - totalSimBills)}</div>
-                            </div>
-                            <div className="summary-grid-item recurring">
-                              <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Recurring</div>
-                              <div style={{ fontSize: 16, fontWeight: 700 }}>{simBills.filter(b => b.recurring).length}</div>
-                            </div>
-                            <div className="summary-grid-item">
-                              <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>One-time</div>
-                              <div style={{ fontSize: 16, fontWeight: 700 }}>{simBills.filter(b => !b.recurring).length}</div>
-                            </div>
-                          </div>
-
-                          {/* Bills List grouped by date */}
-                          {Object.entries(
-                            simBills.reduce((groups, bill) => {
-                              const dateKey = bill.dueDate;
-                              if (!groups[dateKey]) groups[dateKey] = [];
-                              groups[dateKey].push(bill);
-                              return groups;
-                            }, {})
-                          ).sort(([a], [b]) => new Date(a) - new Date(b)).map(([date, bills]) => (
-                            <div key={date} style={{ marginBottom: 16 }}>
-                              <div className="date-group-header">
-                                <span>📅 {idDateFull(date)}</span>
-                                <span>{fmt(bills.reduce((s, b) => s + b.amount, 0))}</span>
-                              </div>
-                              {bills.map(bill => (
-                                <div key={bill.id} className="bill-card" style={{ marginBottom: 8 }}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div>
-                                      <div style={{ fontWeight: 600 }}>{bill.name}</div>
-                                      <div style={{ fontSize: 13, color: 'var(--fb-text-secondary)' }}>
-                                        {fmt(bill.amount)}
-                                        {bill.recurring && <span className="status-badge recurring" style={{ marginLeft: 8 }}>tiap {bill.recurringDays} hari</span>}
-                                      </div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: 8 }}>
-                                      <button className="fb-btn fb-btn-secondary" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => setEditingSimBill(bill)}>
-                                        ✏️ Edit
-                                      </button>
-                                      <button className="fb-btn fb-btn-danger" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => deleteSimBill(bill.id)}>
-                                        🗑
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ))}
-                        </>
-                      )}
-                    </div>
-
-                    {/* Share Buttons */}
-                    {simBills.length > 0 && (
-                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                        <button className="fb-btn fb-btn-whatsapp" onClick={shareToWhatsApp}>
-                          📱 Bagikan ke WhatsApp
-                        </button>
-                        <button className="fb-btn fb-btn-secondary" onClick={copyToClipboard}>
-                          📋 Salin ke Clipboard
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {subTab === 'kalender' && (
-                  <div>
-                    {/* Calendar View */}
-                    <div className="fb-card" style={{ padding: 16, marginBottom: 20 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                        <h3 style={{ margin: 0 }}>📅 Kalender Tagihan</h3>
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-                          <span className="status-badge unpaid">{unpaidCount} belum bayar</span>
-                          <span className="status-badge paid">{paidCount} lunas</span>
-                        </div>
-                      </div>
-
-                      {/* Calendar Grid */}
-                      <div className="calendar-grid">
-                        {weekDays.map(day => (
-                          <div key={day} className="calendar-header">{day}</div>
-                        ))}
-                        {/* Empty cells for days before the first day of month */}
-                        {Array.from({ length: calendarDates[0]?.getDay() || 0 }).map((_, i) => (
-                          <div key={`empty-${i}`} className="calendar-cell" style={{ background: 'var(--fb-gray-light)' }} />
-                        ))}
-                        {calendarDates.map(date => {
-                          const billsOnDate = getBillsForDate(date);
-                          const hasBills = billsOnDate.length > 0;
-                          const allPaid = hasBills && billsOnDate.every(b => b.paid);
-                          return (
-                            <div
-                              key={date.toISOString()}
-                              className={`calendar-cell ${isToday(date) ? 'today' : ''} ${hasBills && !allPaid ? 'has-bill' : ''}`}
-                              onClick={() => {
-                                if (billsOnDate.length > 0) {
-                                  // Show bills for this date
-                                }
-                              }}
-                            >
-                              <div className="date-num" style={{ color: allPaid ? 'var(--fb-green)' : undefined }}>{date.getDate()}</div>
-                              {billsOnDate.slice(0, 3).map(bill => (
-                                <div
-                                  key={bill.id}
-                                    className={`bill-item ${bill.paid ? 'paid' : ''}`}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setEditingTagihan(bill);
-                                  }}
-                                >
-                                  {bill.name} - {fmt(bill.amount)}
-                                </div>
-                              ))}
-                              {billsOnDate.length > 3 && (
-                                <div style={{ fontSize: 10, color: 'var(--fb-text-secondary)', marginTop: 2 }}>
-                                  +{billsOnDate.length - 3} lainnya
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Tagihan List */}
-                    <div className="fb-card" style={{ padding: 16 }}>
-                      <h3 style={{ margin: '0 0 12px 0' }}>📋 Daftar Tagihan</h3>
-                      
-                      {tagihan.length === 0 ? (
-                        <p style={{ color: 'var(--fb-text-secondary)', textAlign: 'center', padding: 20 }}>
-                          Belum ada tagihan. Buat simulasi dan klik "Generate Tagihan" untuk membuat tagihan.
-                        </p>
-                      ) : (
-                        <>
-                          {/* Summary */}
-                          <div className="grid-5-cols" style={{ marginBottom: 16 }}>
-                            <div className="summary-grid-item">
-                              <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Total Tagihan</div>
-                              <div style={{ fontSize: 16, fontWeight: 700 }}>{fmt(totalTagihan + totalPaid)}</div>
-                            </div>
-                            <div className="summary-grid-item">
-                              <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Belum Bayar</div>
-                              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--warning)' }}>{fmt(totalTagihan)}</div>
-                            </div>
-                            <div className="summary-grid-item" style={{ borderLeftColor: 'var(--fb-green)' }}>
-                              <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Sudah Bayar</div>
-                              <div style={{ fontSize: 16, fontWeight: 700, color: 'var(--fb-green)' }}>{fmt(totalPaid)}</div>
-                            </div>
-                            <div className="summary-grid-item">
-                              <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Item Belum Bayar</div>
-                              <div style={{ fontSize: 16, fontWeight: 700 }}>{unpaidCount}</div>
-                            </div>
-                            <div className="summary-grid-item" style={{ borderLeftColor: 'var(--fb-green)' }}>
-                              <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Item Lunas</div>
-                              <div style={{ fontSize: 16, fontWeight: 700 }}>{paidCount}</div>
-                            </div>
-                          </div>
-
-                          {/* Tagihan grouped by date */}
-                          {Object.entries(
-                            tagihan.reduce((groups, t) => {
-                              const dateKey = t.dueDate;
-                              if (!groups[dateKey]) groups[dateKey] = [];
-                              groups[dateKey].push(t);
-                              return groups;
-                            }, {})
-                          ).sort(([a], [b]) => new Date(a) - new Date(b)).map(([date, bills]) => (
-                            <div key={date} style={{ marginBottom: 16 }}>
-                              <div className="date-group-header">
-                                <span>📅 {idDateFull(date)}</span>
-                                <span>{fmt(bills.reduce((s, b) => s + b.amount, 0))}</span>
-                              </div>
-                              {bills.map(bill => (
-                                <div key={bill.id} className={`bill-card ${bill.paid ? 'paid' : 'unpaid'}`} style={{ marginBottom: 8 }}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div style={{ flex: 1 }}>
-                                      <div style={{ fontWeight: 600, textDecoration: bill.paid ? 'line-through' : 'none' }}>{bill.name}</div>
-                                      <div style={{ fontSize: 13, color: 'var(--fb-text-secondary)' }}>
-                                        {fmt(bill.amount)}
-                                        {bill.recurringDays > 0 && <span style={{ fontSize: 11, marginLeft: 8 }}>(tiap {bill.recurringDays} hari)</span>}
-                                      </div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                                      <span className={`status-badge ${bill.paid ? 'paid' : 'unpaid'}`}>
-                                        {bill.paid ? '✓ Lunas' : 'Belum Bayar'}
-                                      </span>
-                                      <button
-                                        className={`fb-btn ${bill.paid ? 'fb-btn-secondary' : 'fb-btn-success'}`}
-                                        style={{ fontSize: 11, padding: '4px 8px' }}
-                                        onClick={() => togglePaid(bill.id)}
-                                      >
-                                        {bill.paid ? '↩️ Undo' : '✓ Bayar'}
-                                      </button>
-                                      <button
-                                        className="fb-btn fb-btn-warning"
-                                        style={{ fontSize: 11, padding: '4px 8px' }}
-                                        onClick={() => setMoveTagihan(bill)}
-                                      >
-                                        📤 Pindah
-                                      </button>
-                                      <button
-                                        className="fb-btn fb-btn-danger"
-                                        style={{ fontSize: 11, padding: '4px 8px' }}
-                                        onClick={() => deleteTagihan(bill.id)}
-                                      >
-                                        🗑
-                                      </button>
-                                    </div>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          ))}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {subTab === 'buku-periode' && (
-                  <div>
-                    <div className="fb-card" style={{ padding: 16 }}>
-                      <h3 style={{ margin: '0 0 12px 0' }}>📕 Buku Periode (Riwayat)</h3>
-                      
-                      {bukuPeriode.length === 0 ? (
-                        <p style={{ color: 'var(--fb-text-secondary)', textAlign: 'center', padding: 20 }}>
-                          Belum ada periode yang ditutup. Klik "Tutup Buku Periode" di tab Kalender untuk menyimpan periode.
-                        </p>
-                      ) : (
-                        bukuPeriode.map(buku => (
-                          <div key={buku.id} className="saved-sim-card">
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                              <div>
-                                <div style={{ fontWeight: 600 }}>Periode: {idDateFull(buku.period.start)} - {idDateFull(buku.period.end)}</div>
-                                <div style={{ fontSize: 12, color: 'var(--fb-text-secondary)' }}>
-                                  Ditutup: {new Date(buku.closedAt).toLocaleString('id-ID')}
-                                </div>
-                              </div>
-                              <button className="fb-btn fb-btn-danger" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => deleteBukuPeriode(buku.id)}>
-                                🗑 Hapus
-                              </button>
-                            </div>
-                            <div className="grid-5-cols">
-                              <div className="summary-grid-item">
-                                <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Pemasukan</div>
-                                <div style={{ fontSize: 14, fontWeight: 700 }}>{fmt(buku.summary?.totalIncome || 0)}</div>
-                              </div>
-                              <div className="summary-grid-item">
-                                <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Total Tagihan</div>
-                                <div style={{ fontSize: 14, fontWeight: 700 }}>{fmt(buku.summary?.totalTagihan || 0)}</div>
-                              </div>
-                              <div className="summary-grid-item" style={{ borderLeftColor: 'var(--fb-green)' }}>
-                                <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Dibayar</div>
-                                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--fb-green)' }}>{fmt(buku.summary?.totalPaid || 0)}</div>
-                              </div>
-                              <div className="summary-grid-item">
-                                <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Lunas</div>
-                                <div style={{ fontSize: 14, fontWeight: 700 }}>{buku.summary?.paidCount || 0}</div>
-                              </div>
-                              <div className="summary-grid-item" style={{ borderLeftColor: 'var(--warning)' }}>
-                                <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Belum Bayar</div>
-                                <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--warning)' }}>{buku.summary?.unpaidCount || 0}</div>
-                              </div>
-                            </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </main>
-
-          {/* Edit SimBill Modal */}
-          {editingSimBill && (
-            <div className="modal-overlay" onClick={() => setEditingSimBill(null)}>
-              <div className="modal" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header">
-                  <h3 className="modal-title">{editingSimBill.id ? 'Edit' : 'Tambah'} Tagihan Simulasi</h3>
-                  <button onClick={() => setEditingSimBill(null)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer' }}>×</button>
-                </div>
-                <div className="modal-body">
-                  <div style={{ marginBottom: 12 }}>
-                    <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Nama Tagihan</label>
-                    <input
-                      type="text"
-                      className="fb-input"
-                      placeholder="Contoh: Listrik, Air, Internet..."
-                      defaultValue={editingSimBill.name || ''}
-                      id="simBillName"
-                    />
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Jumlah (Rp)</label>
-                    <input
-                      type="number"
-                      className="fb-input"
-                      placeholder="0"
-                      defaultValue={editingSimBill.amount || ''}
-                      id="simBillAmount"
-                    />
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Jatuh Tempo</label>
-                    <input
-                      type="date"
-                      className="fb-input"
-                      defaultValue={editingSimBill.dueDate || period.start}
-                      id="simBillDueDate"
-                    />
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <input
-                        type="checkbox"
-                        defaultChecked={editingSimBill.recurring || false}
-                        id="simBillRecurring"
-                      />
-                      <span>Tagihan berulang</span>
-                    </label>
-                  </div>
-                  <div style={{ marginBottom: 12 }}>
-                    <label style={{ display: 'block', marginBottom: 6, fontWeight: 500 }}>Ulang setiap (hari)</label>
-                    <input
-                      type="number"
-                      className="fb-input"
-                      placeholder="7 untuk mingguan, 30 untuk bulanan..."
-                      defaultValue={editingSimBill.recurringDays || ''}
-                      id="simBillRecurringDays"
-                      disabled={!document.getElementById('simBillRecurring')?.checked}
-                    />
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button className="fb-btn fb-btn-secondary" onClick={() => setEditingSimBill(null)}>Batal</button>
-                  <button className="fb-btn fb-btn-success" onClick={() => {
-                    const name = document.getElementById('simBillName').value;
-                    const amount = Number(document.getElementById('simBillAmount').value);
-                    const dueDate = document.getElementById('simBillDueDate').value;
-                    const recurring = document.getElementById('simBillRecurring').checked;
-                    const recurringDays = Number(document.getElementById('simBillRecurringDays').value) || 0;
-                    
-                    if (saveSimBill({ ...editingSimBill, name, amount, dueDate, recurring, recurringDays })) {
-                      setEditingSimBill(null);
-                    }
-                  }}>Simpan</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Edit Tagihan Modal */}
-          {editingTagihan && (
-            <div className="modal-overlay" onClick={() => setEditingTagihan(null)}>
-              <div className="modal" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header">
-                  <h3 className="modal-title">Detail Tagihan</h3>
-                  <button onClick={() => setEditingTagihan(null)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer' }}>×</button>
-                </div>
-                <div className="modal-body">
-                  <div style={{ marginBottom: 16 }}>
-                    <strong>{editingTagihan.name}</strong>
-                    <div style={{ fontSize: 20, color: 'var(--fb-blue)', marginTop: 8 }}>{fmt(editingTagihan.amount)}</div>
-                    <div style={{ fontSize: 13, color: 'var(--fb-text-secondary)', marginTop: 4 }}>
-                      Jatuh tempo: {idDateFull(editingTagihan.dueDate)}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                    <button
-                      className={`fb-btn ${editingTagihan.paid ? 'fb-btn-secondary' : 'fb-btn-success'}`}
-                      onClick={() => {
-                        togglePaid(editingTagihan.id);
-                        setEditingTagihan(null);
-                      }}
-                    >
-                      {editingTagihan.paid ? '↩️ Tandai Belum Bayar' : '✓ Tandai Lunas'}
+                  )}
+                  {subTab === 'kalender' && (
+                    <button className="fb-btn fb-btn-purple" onClick={tutupBukuPeriode}>
+                      📕 Tutup Buku Periode
                     </button>
-                    <button
-                      className="fb-btn fb-btn-warning"
-                      onClick={() => {
-                        setMoveTagihan(editingTagihan);
-                        setEditingTagihan(null);
-                      }}
-                    >
-                      📤 Pindahkan
-                    </button>
-                    <button
-                      className="fb-btn fb-btn-danger"
-                      onClick={() => {
-                        deleteTagihan(editingTagihan.id);
-                        setEditingTagihan(null);
-                      }}
-                    >
-                      🗑 Hapus
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Move Tagihan Modal */}
-          {moveTagihan && (
-            <div className="modal-overlay" onClick={() => setMoveTagihan(null)}>
-              <div className="modal" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header">
-                  <h3 className="modal-title">📤 Pindahkan Tagihan</h3>
-                  <button onClick={() => setMoveTagihan(null)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer' }}>×</button>
-                </div>
-                <div className="modal-body">
-                  <p style={{ marginBottom: 16 }}>
-                    Pindahkan <strong>{moveTagihan.name}</strong> ({fmt(moveTagihan.amount)}) dari <strong>{idDateFull(moveTagihan.dueDate)}</strong> ke:
-                  </p>
-                  <input
-                    type="date"
-                    className="fb-input"
-                    defaultValue={moveTagihan.dueDate}
-                    id="moveTagihanDate"
-                  />
-                  <div style={{ marginTop: 12, fontSize: 12, color: 'var(--fb-text-secondary)' }}>
-                    <strong>Catatan:</strong> Jika sudah ada tagihan dengan nama yang sama di tanggal tujuan, jumlah akan digabung.
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button className="fb-btn fb-btn-secondary" onClick={() => setMoveTagihan(null)}>Batal</button>
-                  <button className="fb-btn fb-btn-warning" onClick={() => {
-                    const newDate = document.getElementById('moveTagihanDate').value;
-                    moveTagihanToDate(moveTagihan.id, newDate);
-                    setMoveTagihan(null);
-                  }}>Pindahkan</button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Template Manager Modal */}
-          {showTemplateManager && (
-            <div className="modal-overlay" onClick={() => setShowTemplateManager(false)}>
-              <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 600 }}>
-                <div className="modal-header">
-                  <h3 className="modal-title">📋 Template Tagihan</h3>
-                  <button onClick={() => setShowTemplateManager(false)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer' }}>×</button>
-                </div>
-                <div className="modal-body">
-                  <p style={{ fontSize: 13, color: 'var(--fb-text-secondary)', marginBottom: 16 }}>
-                    Template memudahkan Anda menambahkan tagihan yang sering digunakan.
-                  </p>
-
-                  {/* Add Template Form */}
-                  <div style={{ background: 'var(--fb-gray-light)', padding: 12, borderRadius: 8, marginBottom: 16 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 8 }}>+ Template Baru</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                      <input type="text" className="fb-input" placeholder="Nama template" id="templateName" />
-                      <input type="number" className="fb-input" placeholder="Jumlah" id="templateAmount" />
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-                      <div>
-                        <label style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Jatuh Tempo</label>
-                        <input type="date" className="fb-input" defaultValue={period.start} id="templateDueDate" />
-                      </div>
-                      <div>
-                        <label style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>Ulang (hari)</label>
-                        <input type="number" className="fb-input" placeholder="0 = sekali" id="templateRecurring" />
-                      </div>
-                    </div>
-                    <button className="fb-btn fb-btn-success" style={{ width: '100%' }} onClick={() => {
-                      const name = document.getElementById('templateName').value;
-                      const amount = Number(document.getElementById('templateAmount').value);
-                      const dueDate = document.getElementById('templateDueDate').value;
-                      const recurringDays = Number(document.getElementById('templateRecurring').value) || 0;
-                      
-                      if (!name || amount <= 0) {
-                        showToast('Lengkapi nama dan jumlah', 'error');
-                        return;
-                      }
-                      
-                      addTemplate({ name, amount, dueDate, recurringDays, recurring: recurringDays > 0 });
-                      document.getElementById('templateName').value = '';
-                      document.getElementById('templateAmount').value = '';
-                    }}>+ Tambah Template</button>
-                  </div>
-
-                  {/* Template List */}
-                  {templates.length === 0 ? (
-                    <p style={{ textAlign: 'center', color: 'var(--fb-text-secondary)', padding: 20 }}>Belum ada template</p>
-                  ) : (
-                    templates.map(template => (
-                      <div key={template.id} className="template-card">
-                        <div>
-                          <div style={{ fontWeight: 600 }}>{template.name}</div>
-                          <div style={{ fontSize: 12, color: 'var(--fb-text-secondary)' }}>
-                            {fmt(template.amount)}
-                            {template.recurring && <span style={{ marginLeft: 8 }} className="status-badge recurring">tiap {template.recurringDays} hari</span>}
-                          </div>
-                        </div>
-                        <div style={{ display: 'flex', gap: 8 }}>
-                          <button className="fb-btn" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => {
-                            // Add to simulation
-                            saveSimBill({
-                              name: template.name,
-                              amount: template.amount,
-                              dueDate: template.dueDate,
-                              recurring: template.recurring,
-                              recurringDays: template.recurringDays
-                            });
-                            showToast(`"${template.name}" ditambahkan ke simulasi`);
-                          }}>+ Pakai</button>
-                          <button className="fb-btn fb-btn-danger" style={{ fontSize: 11, padding: '4px 8px' }} onClick={() => deleteTemplate(template.id)}>🗑</button>
-                        </div>
-                      </div>
-                    ))
                   )}
                 </div>
+                
+                <div className="sub-tabs">
+                  <button 
+                    className={`sub-tab ${subTab === 'simulasi' ? 'active' : ''}`}
+                    onClick={() => setSubTab('simulasi')}
+                  >
+                    📝 Simulasi Tagihan
+                  </button>
+                  <button 
+                    className={`sub-tab ${subTab === 'kalender' ? 'active' : ''}`}
+                    onClick={() => setSubTab('kalender')}
+                  >
+                    📅 Kalender Tagihan
+                  </button>
+                  <button 
+                    className={`sub-tab ${subTab === 'buku-periode' ? 'active' : ''}`}
+                    onClick={() => setSubTab('buku-periode')}
+                  >
+                    📕 Buku Periode
+                  </button>
+                </div>
+                
+                {/* Summary Card inside Header - Sticky */}
+                {subTab === 'simulasi' && (
+                  <div className="summary-card" style={{ marginTop: 12 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 16, fontWeight: 700 }}>{fmt(totalIncome)}</div>
+                        <div style={{ fontSize: 11, opacity: 0.9 }}>Pemasukan</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 16, fontWeight: 700 }}>{fmt(totalSimBills)}</div>
+                        <div style={{ fontSize: 11, opacity: 0.9 }}>Simulasi Tagihan</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 16, fontWeight: 700 }}>{fmt(totalIncome - totalSimBills)}</div>
+                        <div style={{ fontSize: 11, opacity: 0.9 }}>Sisa</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 16, fontWeight: 700 }}>{simBillsCount}</div>
+                        <div style={{ fontSize: 11, opacity: 0.9 }}>Jumlah Tagihan</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {subTab === 'kalender' && (
+                  <div className="summary-card" style={{ marginTop: 12 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 12 }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 2 }}>Sumber Pemasukan</div>
+                        <div style={{ fontSize: 18, fontWeight: 700 }}>{incomes.length}</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 2 }}>Total Tagihan</div>
+                        <div style={{ fontSize: 18, fontWeight: 700 }}>{tagihan.length}</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 2 }}>Total Tertunda</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#fbbf24' }}>{fmt(totalTagihan)}</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 2 }}>Sudah Bayar</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#4ade80' }}>{paidCount} ({fmt(totalPaid)})</div>
+                      </div>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 2 }}>Sisa Akhir</div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: totalIncome - totalTagihan >= 0 ? '#4ade80' : '#f87171' }}>{fmt(totalIncome - totalTagihan)}</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Simulasi Tab */}
+            {subTab === 'simulasi' && (
+              <SimulasiTab
+                period={period}
+                setPeriod={setPeriod}
+                incomes={incomes}
+                addIncome={addIncome}
+                updateIncome={updateIncome}
+                removeIncome={removeIncome}
+                simBills={simBills}
+                saveSimBill={saveSimBill}
+                deleteSimBill={deleteSimBill}
+                setShowAddBillModal={setShowAddBillModal}
+                setEditingSimBill={setEditingSimBill}
+                totalIncome={totalIncome}
+                totalSimBills={totalSimBills}
+                simBillsCount={simBillsCount}
+                shareToWhatsApp={shareToWhatsApp}
+                copyToClipboard={copyToClipboard}
+                templates={templates}
+                savedSimulations={savedSimulations}
+                loadSimulation={loadSimulation}
+                deleteSimulation={deleteSimulation}
+                updateSavedSimulation={updateSavedSimulation}
+              />
+            )}
+
+            {/* Kalender Tab */}
+            {subTab === 'kalender' && (
+              <KalenderTab
+                calendarYear={calendarYear}
+                calendarMonthIdx={calendarMonthIdx}
+                calendarDates={calendarDates}
+                weekDays={weekDays}
+                isToday={isToday}
+                getBillsForDate={getBillsForDate}
+                tagihan={tagihan}
+                togglePaid={togglePaid}
+                deleteTagihan={deleteTagihan}
+                totalIncome={totalIncome}
+                totalTagihan={totalTagihan}
+                totalPaid={totalPaid}
+                paidCount={paidCount}
+                unpaidCount={unpaidCount}
+                incomeCount={incomes.length}
+                period={period}
+                setEditingTagihan={setEditingTagihan}
+                setMoveTagihan={setMoveTagihan}
+              />
+            )}
+
+            {/* Buku Periode Tab */}
+            {subTab === 'buku-periode' && (
+              <BukuPeriodeTab
+                bukuPeriode={bukuPeriode}
+                deleteBukuPeriode={deleteBukuPeriode}
+              />
+            )}
+          </div>
+        )}
+      </main>
+
+      {/* Template Manager Modal */}
+      {showTemplateManager && (
+        <TemplateManagerModal
+          templates={templates}
+          addTemplate={addTemplate}
+          updateTemplate={updateTemplate}
+          deleteTemplate={deleteTemplate}
+          onClose={() => setShowTemplateManager(false)}
+        />
+      )}
+
+      {/* Add Bill Modal */}
+      {showAddBillModal && (
+        <AddBillModal
+          period={period}
+          templates={templates}
+          addTemplate={addTemplate}
+          onSave={(billData) => {
+            if (saveSimBill(billData)) {
+              setShowAddBillModal(false);
+            }
+          }}
+          onClose={() => setShowAddBillModal(false)}
+        />
+      )}
+
+      {/* Edit Sim Bill Modal */}
+      {editingSimBill && (
+        <AddBillModal
+          period={period}
+          templates={templates}
+          addTemplate={addTemplate}
+          bill={editingSimBill}
+          onSave={(billData) => {
+            if (saveSimBill(billData)) {
+              setEditingSimBill(null);
+            }
+          }}
+          onClose={() => setEditingSimBill(null)}
+        />
+      )}
+
+      {/* Edit Tagihan Modal (from Calendar) */}
+      {editingTagihan && (
+        <EditTagihanModal
+          tagihan={editingTagihan}
+          onSave={(data) => {
+            updateTagihan(editingTagihan.id, data);
+            setEditingTagihan(null);
+          }}
+          onTogglePaid={() => {
+            togglePaid(editingTagihan.id);
+            setEditingTagihan(null);
+          }}
+          onDelete={() => {
+            deleteTagihan(editingTagihan.id);
+            setEditingTagihan(null);
+          }}
+          onMove={() => {
+            setMoveTagihan(editingTagihan);
+            setEditingTagihan(null);
+          }}
+          onClose={() => setEditingTagihan(null)}
+        />
+      )}
+
+      {/* Move to Date Modal */}
+      {moveTagihan && (
+        <MoveToDateModal
+          tagihan={moveTagihan}
+          period={period}
+          tagihanList={tagihan}
+          onMove={(newDate) => {
+            moveTagihanToDate(moveTagihan.id, newDate);
+            setMoveTagihan(null);
+          }}
+          onClose={() => setMoveTagihan(null)}
+        />
+      )}
+
+          {/* Firebase Settings Modal */}
+          {showFirebaseSettings && (
+            <div className="modal-overlay" onClick={() => setShowFirebaseSettings(false)}>
+              <div className="modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+                <div className="modal-header">
+                  <h3 className="modal-title">☁️ Pengaturan Firebase</h3>
+                  <button onClick={() => setShowFirebaseSettings(false)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer' }}>×</button>
+                </div>
+                <div className="modal-body" style={{ padding: 0 }}>
+                  <ConfigSetup onSave={(config) => {
+                    setShowFirebaseSettings(false);
+                    window.location.reload();
+                  }} existingConfig={getFirebaseConfig()} />
+                </div>
               </div>
             </div>
           )}
 
-          {/* Firebase Settings Modal */}
-          {renderFirebaseSettingsModal()}
-
-          {/* Toast */}
           {toast}
         </>
       )}
@@ -2113,7 +1569,1076 @@ function App() {
   );
 }
 
-ReactDOM.render(<App />, document.getElementById('root'));
+// ========== SIMULASI TAB ==========
+function SimulasiTab({ period, setPeriod, incomes, addIncome, updateIncome, removeIncome, simBills, saveSimBill, deleteSimBill, setShowAddBillModal, setEditingSimBill, totalIncome, totalSimBills, simBillsCount, shareToWhatsApp, copyToClipboard, templates, savedSimulations, loadSimulation, deleteSimulation, updateSavedSimulation }) {
+  const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  
+  // Group simBills by date for summary
+  const groupedByDate = useMemo(() => {
+    const groups = {};
+    simBills.forEach(bill => {
+      if (bill.amount > 0) {
+        const dateKey = bill.dueDate;
+        if (!groups[dateKey]) {
+          groups[dateKey] = [];
+        }
+        groups[dateKey].push(bill);
+      }
+    });
+    
+    // Sort by date
+    const sortedDates = Object.keys(groups).sort((a, b) => {
+      const dateA = parseLocalDate(a);
+      const dateB = parseLocalDate(b);
+      return dateA - dateB;
+    });
+    return sortedDates.map(date => ({
+      date,
+      bills: groups[date].sort((a, b) => a.name.localeCompare(b.name)),
+      total: groups[date].reduce((sum, b) => sum + b.amount, 0)
+    }));
+  }, [simBills]);
+
+  return (
+    <div>
+      {/* Saved Simulations */}
+      {savedSimulations.length > 0 && (
+        <div className="fb-card" style={{ padding: 16, marginBottom: 20 }}>
+          <h4 style={{ margin: '0 0 12px 0', fontSize: 14 }}>💾 Simulasi Tersimpan</h4>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {savedSimulations.map(sim => (
+              <div key={sim.id} style={{ 
+                background: 'var(--fb-gray-light)', 
+                borderRadius: 8, 
+                padding: '8px 12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                <span 
+                  style={{ cursor: 'pointer', fontWeight: 500 }}
+                  onClick={() => loadSimulation(sim.id)}
+                  title="Klik untuk memuat simulasi ini"
+                >
+                  {sim.name}
+                </span>
+                <button
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--fb-blue)' }}
+                  onClick={() => updateSavedSimulation(sim.id)}
+                  title="Perbarui simulasi ini dengan data saat ini"
+                >
+                  💾
+                </button>
+                <button
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: 'var(--danger)' }}
+                  onClick={() => {
+                    if (confirm(`Hapus simulasi "${sim.name}"?`)) {
+                      deleteSimulation(sim.id);
+                    }
+                  }}
+                  title="Hapus simulasi"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Ringkasan Simulasi dalam bentuk Grid 4 per baris */}
+      {simBills.length > 0 && (
+        <div className="fb-card" style={{ padding: 20, marginBottom: 20 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h3 style={{ margin: 0, fontSize: 18 }}>📋 Ringkasan Simulasi Tagihan</h3>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button 
+                className="fb-btn fb-btn-whatsapp" 
+                style={{ padding: '8px 16px', fontSize: 13 }}
+                onClick={shareToWhatsApp}
+              >
+                📱 Share WA
+              </button>
+              <button 
+                className="fb-btn fb-btn-secondary" 
+                style={{ padding: '8px 16px', fontSize: 13 }}
+                onClick={copyToClipboard}
+              >
+                📋 Copy
+              </button>
+            </div>
+          </div>
+          
+          {groupedByDate.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 20, color: 'var(--fb-text-secondary)' }}>
+              Belum ada tagihan untuk diringkas
+            </div>
+          ) : (
+            <div>
+              {groupedByDate.map(group => (
+                <div key={group.date} style={{ marginBottom: 24 }}>
+                  {/* Date Header */}
+                  <div className="date-group-header">
+                    <span>📅 {idDateFull(group.date)}</span>
+                    <span style={{ fontSize: 14 }}>Total: {fmt(group.total)}</span>
+                  </div>
+                  
+                  {/* Bills Grid - 4 per row */}
+                  <div className="grid-5-cols">
+                    {group.bills.map((bill) => (
+                      <div 
+                        key={bill.id} 
+                        className={`summary-grid-item ${bill.recurring ? 'recurring' : ''}`}
+                        style={{ cursor: 'pointer' }}
+                        onClick={() => setEditingSimBill(bill)}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                          <h4 style={{ margin: 0, fontSize: 14, flex: 1 }}>{bill.name}</h4>
+                          {bill.recurring && (
+                            <span className="status-badge recurring" style={{ fontSize: 9, padding: '2px 6px' }}>Berulang</span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--warning)', marginBottom: 4 }}>
+                          {fmt(bill.amount)}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)' }}>
+                          {bill.recurring ? `🔄 Tiap ${bill.recurringDays} hari` : '📍 Sekali bayar'}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Period & Income Section */}
+      <div className="fb-card" style={{ padding: 20, marginBottom: 20 }}>
+        <h3 style={{ margin: '0 0 16px 0', fontSize: 18 }}>📅 Periode & Pemasukan</h3>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500 }}>Dari Tanggal</label>
+            <input
+              type="date"
+              className="fb-input"
+              value={period.start}
+              onChange={e => setPeriod({ ...period, start: e.target.value })}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: 6, fontSize: 13, fontWeight: 500 }}>Sampai Tanggal</label>
+            <input
+              type="date"
+              className="fb-input"
+              value={period.end}
+              onChange={e => setPeriod({ ...period, end: e.target.value })}
+            />
+          </div>
+        </div>
+
+        <div style={{ borderTop: '1px solid var(--fb-border)', paddingTop: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <h4 style={{ margin: 0, fontSize: 16 }}>💰 Sumber Pemasukan</h4>
+            <button className="fb-btn fb-btn-secondary" style={{ padding: '8px 16px', fontSize: 13 }} onClick={addIncome}>
+              + Tambah
+            </button>
+          </div>
+
+          <div style={{ display: 'grid', gap: 8 }}>
+            {incomes.map((inc, idx) => (
+              <div key={inc.id} style={{ display: 'grid', gridTemplateColumns: '1fr 140px 140px 36px', gap: 8, alignItems: 'center' }}>
+                <input
+                  className="fb-input"
+                  placeholder={`Sumber ${idx + 1} (Gaji, Bonus, dll)`}
+                  value={inc.name}
+                  onChange={e => updateIncome(inc.id, { name: e.target.value })}
+                />
+                <input
+                  type="number"
+                  className="fb-input"
+                  placeholder="Jumlah (Rp)"
+                  value={inc.amount || ''}
+                  onChange={e => updateIncome(inc.id, { amount: Number(e.target.value) || 0 })}
+                />
+                <input
+                  type="date"
+                  className="fb-input"
+                  value={inc.receiveDate}
+                  onChange={e => updateIncome(inc.id, { receiveDate: e.target.value })}
+                />
+                {incomes.length > 1 && (
+                  <button 
+                    className="fb-btn fb-btn-danger" 
+                    style={{ padding: '8px 10px', fontSize: 12 }}
+                    onClick={() => removeIncome(inc.id)}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Simulation Bills Grid */}
+      <div className="fb-card" style={{ padding: 20 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+          <h3 style={{ margin: 0, fontSize: 18 }}>🧾 Simulasi Tagihan</h3>
+          <button className="fb-btn" onClick={() => setShowAddBillModal(true)}>
+            + Tambah Tagihan
+          </button>
+        </div>
+
+        {simBills.length === 0 ? (
+          <div className="empty-state">
+            <div className="icon">📝</div>
+            <p style={{ fontSize: 16, fontWeight: 500 }}>Belum ada simulasi tagihan</p>
+            <p style={{ fontSize: 14 }}>Klik "+ Tambah Tagihan" untuk mulai</p>
+            {templates.length > 0 && (
+              <p style={{ fontSize: 13, color: 'var(--purple)', marginTop: 8 }}>
+                💡 Tip: Pilih dari template saat menambah tagihan baru
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="grid-container">
+            {simBills.map(bill => (
+              <div key={bill.id} className="bill-card unpaid">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <h4 style={{ margin: 0, fontSize: 16, flex: 1 }}>{bill.name}</h4>
+                  {bill.recurring && (
+                    <span className="status-badge recurring">Berulang</span>
+                  )}
+                </div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: 'var(--warning)', marginBottom: 8 }}>
+                  {fmt(bill.amount)}
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--fb-text-secondary)', marginBottom: 12 }}>
+                  📅 {idDateShort(bill.dueDate)}
+                  {bill.recurring && bill.recurringDays && (
+                    <span> • Tiap {bill.recurringDays} hari</span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button 
+                    className="fb-btn fb-btn-secondary" 
+                    style={{ flex: 1, padding: '8px', fontSize: 13 }}
+                    onClick={() => setEditingSimBill(bill)}
+                  >
+                    ✎ Edit
+                  </button>
+                  <button 
+                    className="fb-btn fb-btn-danger" 
+                    style={{ padding: '8px 12px', fontSize: 13 }}
+                    onClick={() => {
+                      if (confirm(`Hapus "${bill.name}"?`)) deleteSimBill(bill.id);
+                    }}
+                  >
+                    🗑
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ========== KALENDER TAB ==========
+function KalenderTab({ calendarYear, calendarMonthIdx, calendarDates, weekDays, isToday, getBillsForDate, tagihan, togglePaid, deleteTagihan, totalIncome, totalTagihan, totalPaid, paidCount, unpaidCount, incomeCount, period, setEditingTagihan, setMoveTagihan }) {
+  const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  
+  // Get period range for filtering
+  const startDate = parseLocalDate(period.start);
+  const endDate = parseLocalDate(period.end);
+  const startDay = startDate ? startDate.getDate() : 1;
+  const endDay = endDate ? endDate.getDate() : 31;
+  const remaining = totalIncome - totalTagihan;
+  
+  // Filter calendar dates to only show dates within the period
+  const filteredDates = calendarDates.filter(date => {
+    const day = date.getDate();
+    return day >= startDay && day <= endDay;
+  });
+  
+  return (
+    <div>
+      {/* Calendar */}
+      <div className="fb-card" style={{ padding: 20, marginBottom: 20 }}>
+        <h3 style={{ margin: '0 0 16px 0', fontSize: 18 }}>
+          📅 {monthNames[calendarMonthIdx]} {calendarYear} (Tanggal {startDay}-{endDay})
+        </h3>
+        
+        <div className="calendar-grid">
+          {/* Week day headers */}
+          {weekDays.map(day => (
+            <div key={day} className="calendar-header">{day}</div>
+          ))}
+          
+          {/* Empty cells for days before the 1st */}
+          {filteredDates.length > 0 && Array.from({ length: filteredDates[0].getDay() }).map((_, i) => (
+            <div key={`empty-${i}`} className="calendar-cell" style={{ background: 'var(--fb-gray-light)' }} />
+          ))}
+          
+          {/* Calendar dates - only within period range - SHOW ALL BILLS */}
+          {filteredDates.map(date => {
+            const bills = getBillsForDate(date);
+            const hasBill = bills.length > 0;
+            const totalAmount = bills.reduce((s, b) => s + b.amount, 0);
+            
+            return (
+              <div 
+                key={date.getTime()} 
+                className={`calendar-cell ${isToday(date) ? 'today' : ''} ${hasBill ? 'has-bill' : ''}`}
+              >
+                <div className="date-num">{date.getDate()}</div>
+                {/* Show ALL bills without truncation */}
+                {bills.map((bill, idx) => (
+                  <div 
+                    key={bill.id} 
+                    className={`bill-item ${bill.paid ? 'paid' : ''}`}
+                    title={`${bill.name}: ${fmt(bill.amount)}\nKlik untuk opsi lainnya`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingTagihan(bill);
+                    }}
+                  >
+                    {bill.name.length > 8 ? bill.name.slice(0, 8) + '...' : bill.name} - {fmt(bill.amount).replace('Rp', '').trim()}
+                  </div>
+                ))}
+                {hasBill && (
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--warning)', marginTop: 4 }}>
+                    Total: {fmt(totalAmount).replace('Rp', '').trim()}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      
+      {/* Legend */}
+      <div className="fb-card" style={{ padding: 16 }}>
+        <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 16, height: 16, background: 'var(--fb-blue-light)', borderRadius: 4 }} />
+            <span style={{ fontSize: 13 }}>Hari ini</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 16, height: 16, background: '#fff7ed', border: '1px solid var(--warning)', borderRadius: 4 }} />
+            <span style={{ fontSize: 13 }}>Ada tagihan</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 16, height: 16, background: 'var(--warning)', borderRadius: 4 }} />
+            <span style={{ fontSize: 13 }}>Belum bayar</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 16, height: 16, background: 'var(--fb-green)', borderRadius: 4 }} />
+            <span style={{ fontSize: 13 }}>Sudah bayar</span>
+          </div>
+        </div>
+        <p style={{ margin: '12px 0 0 0', fontSize: 12, color: 'var(--fb-text-secondary)' }}>
+          💡 Klik tagihan di kalender untuk membuka menu Edit, Hapus, atau Pindahkan ke tanggal lain.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ========== BUKU PERIODE TAB ==========
+function BukuPeriodeTab({ bukuPeriode, deleteBukuPeriode }) {
+  const [selectedBuku, setSelectedBuku] = useState(null);
+  const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  
+  if (selectedBuku) {
+    const buku = bukuPeriode.find(b => b.id === selectedBuku);
+    if (!buku) {
+      setSelectedBuku(null);
+      return null;
+    }
+    
+    return (
+      <div>
+        <button 
+          className="fb-btn fb-btn-secondary" 
+          style={{ marginBottom: 16 }}
+          onClick={() => setSelectedBuku(null)}
+        >
+          ← Kembali
+        </button>
+        
+        {/* Sticky Summary */}
+        <div className="summary-card" style={{ marginBottom: 20 }}>
+          <h3 style={{ margin: '0 0 16px 0' }}>📖 Detail Buku Periode</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 13, opacity: 0.8 }}>Pemasukan</div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{fmt(buku.summary.totalIncome)}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 13, opacity: 0.8 }}>Total Tagihan</div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{fmt(buku.summary.totalTagihan)}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 13, opacity: 0.8 }}>Dibayar</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: '#4ade80' }}>{buku.summary.paidCount}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 13, opacity: 0.8 }}>Belum Bayar</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: '#fbbf24' }}>{buku.summary.unpaidCount}</div>
+            </div>
+          </div>
+          <div style={{ marginTop: 12, fontSize: 13, opacity: 0.8 }}>
+            Periode: {parseLocalDate(buku.period.start)?.getDate()} - {parseLocalDate(buku.period.end)?.getDate()} {monthNames[parseLocalDate(buku.period.start)?.getMonth()]} {parseLocalDate(buku.period.start)?.getFullYear()}
+          </div>
+          <div style={{ fontSize: 12, opacity: 0.6, marginTop: 8 }}>
+            Ditutup pada: {new Date(buku.closedAt).toLocaleString('id-ID')}
+          </div>
+        </div>
+        
+        <div className="fb-card" style={{ padding: 20 }}>
+          <h4 style={{ margin: '0 0 16px 0' }}>📋 Daftar Tagihan</h4>
+          <div className="grid-container">
+            {buku.tagihan.map(t => (
+              <div key={t.id} className={`bill-card ${t.paid ? 'paid' : 'unpaid'}`}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <h4 style={{ margin: 0, textDecoration: t.paid ? 'line-through' : 'none' }}>{t.name}</h4>
+                  <span className={`status-badge ${t.paid ? 'paid' : 'unpaid'}`}>
+                    {t.paid ? '✓ Lunas' : '⏳'}
+                  </span>
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: t.paid ? 'var(--fb-green)' : 'var(--warning)' }}>
+                  {fmt(t.amount)}
+                </div>
+                <div style={{ fontSize: 12, color: 'var(--fb-text-secondary)', marginTop: 4 }}>
+                  📅 {idDateShort(t.dueDate)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div>
+      <div className="fb-card" style={{ padding: 20 }}>
+        <h3 style={{ margin: '0 0 16px 0', fontSize: 18 }}>📕 Buku Periode Tersimpan</h3>
+        
+        {bukuPeriode.length === 0 ? (
+          <div className="empty-state">
+            <div className="icon">📕</div>
+            <p style={{ fontSize: 16, fontWeight: 500 }}>Belum ada buku periode</p>
+            <p style={{ fontSize: 14 }}>Klik "Tutup Buku Periode" di Kalender untuk menyimpan</p>
+          </div>
+        ) : (
+          <div className="grid-container">
+            {bukuPeriode.map(buku => (
+              <div key={buku.id} className="fb-card" style={{ padding: 16, cursor: 'pointer' }} onClick={() => setSelectedBuku(buku.id)}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <h4 style={{ margin: 0 }}>
+                    {parseLocalDate(buku.period.start)?.getDate()} - {parseLocalDate(buku.period.end)?.getDate()} {monthNames[parseLocalDate(buku.period.start)?.getMonth()]} {parseLocalDate(buku.period.start)?.getFullYear()}
+                  </h4>
+                  <button
+                    className="fb-btn fb-btn-danger"
+                    style={{ padding: '4px 8px', fontSize: 11 }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (confirm('Hapus buku periode ini?')) deleteBukuPeriode(buku.id);
+                    }}
+                  >
+                    🗑
+                  </button>
+                </div>
+                <div style={{ fontSize: 13, color: 'var(--fb-text-secondary)' }}>
+                  <div>Pemasukan: {fmt(buku.summary.totalIncome)}</div>
+                  <div>Tagihan: {buku.tagihan.length} item</div>
+                  <div style={{ color: 'var(--fb-green)' }}>Dibayar: {buku.summary.paidCount}</div>
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--fb-text-secondary)', marginTop: 8 }}>
+                  Ditutup: {new Date(buku.closedAt).toLocaleDateString('id-ID')}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ========== TEMPLATE MANAGER MODAL ==========
+function TemplateManagerModal({ templates, addTemplate, updateTemplate, deleteTemplate, onClose }) {
+  const { position, handleMouseDown, modalRef } = useDraggable();
+  const [newTemplate, setNewTemplate] = useState({ name: '', amount: 0 });
+  const [editingId, setEditingId] = useState(null);
+  const [editForm, setEditForm] = useState({ name: '', amount: 0 });
+
+  const handleAddTemplate = () => {
+    if (!newTemplate.name || newTemplate.amount <= 0) {
+      alert('Lengkapi nama dan jumlah template');
+      return;
+    }
+    addTemplate(newTemplate);
+    setNewTemplate({ name: '', amount: 0 });
+  };
+
+  const handleUpdateTemplate = (id) => {
+    if (!editForm.name || editForm.amount <= 0) {
+      alert('Lengkapi nama dan jumlah template');
+      return;
+    }
+    updateTemplate(id, editForm);
+    setEditingId(null);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div 
+        className="modal draggable-modal" 
+        ref={modalRef}
+        style={{ 
+          transform: `translate(${position.x}px, ${position.y}px)`,
+          maxWidth: 500
+        }} 
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="modal-header" onMouseDown={handleMouseDown}>
+          <h3 className="modal-title">📋 Template Tagihan</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 28, cursor: 'pointer', color: 'var(--fb-gray)' }}>×</button>
+        </div>
+        
+        <div className="modal-body">
+          <p style={{ fontSize: 13, color: 'var(--fb-text-secondary)', marginBottom: 16 }}>
+            Template memudahkan Anda menambahkan tagihan yang sama berulang kali tanpa perlu mengetik ulang.
+          </p>
+
+          {/* Add New Template */}
+          <div style={{ marginBottom: 20, padding: 16, background: 'var(--fb-gray-light)', borderRadius: 8 }}>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: 14 }}>➕ Tambah Template Baru</h4>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                className="fb-input"
+                placeholder="Nama (contoh: Listrik)"
+                value={newTemplate.name}
+                onChange={e => setNewTemplate({ ...newTemplate, name: e.target.value })}
+                style={{ flex: 1 }}
+              />
+              <input
+                type="number"
+                className="fb-input"
+                placeholder="Jumlah"
+                value={newTemplate.amount || ''}
+                onChange={e => setNewTemplate({ ...newTemplate, amount: Number(e.target.value) || 0 })}
+                style={{ width: 120 }}
+              />
+              <button className="fb-btn fb-btn-success" onClick={handleAddTemplate}>
+                +
+              </button>
+            </div>
+          </div>
+
+          {/* Template List */}
+          <div>
+            <h4 style={{ margin: '0 0 12px 0', fontSize: 14 }}>Daftar Template ({templates.length})</h4>
+            {templates.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 20, color: 'var(--fb-text-secondary)' }}>
+                Belum ada template
+              </div>
+            ) : (
+              templates.map(template => (
+                <div key={template.id} className="template-card">
+                  {editingId === template.id ? (
+                    <div style={{ display: 'flex', gap: 8, flex: 1 }}>
+                      <input
+                        className="fb-input"
+                        value={editForm.name}
+                        onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                        style={{ flex: 1 }}
+                      />
+                      <input
+                        type="number"
+                        className="fb-input"
+                        value={editForm.amount || ''}
+                        onChange={e => setEditForm({ ...editForm, amount: Number(e.target.value) || 0 })}
+                        style={{ width: 100 }}
+                      />
+                      <button className="fb-btn fb-btn-success" style={{ padding: '8px 12px' }} onClick={() => handleUpdateTemplate(template.id)}>
+                        ✓
+                      </button>
+                      <button className="fb-btn fb-btn-secondary" style={{ padding: '8px 12px' }} onClick={() => setEditingId(null)}>
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{template.name}</div>
+                        <div style={{ fontSize: 13, color: 'var(--fb-text-secondary)' }}>{fmt(template.amount)}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button 
+                          className="fb-btn fb-btn-secondary" 
+                          style={{ padding: '4px 8px', fontSize: 11 }}
+                          onClick={() => {
+                            setEditingId(template.id);
+                            setEditForm({ name: template.name, amount: template.amount });
+                          }}
+                        >
+                          ✎
+                        </button>
+                        <button 
+                          className="fb-btn fb-btn-danger" 
+                          style={{ padding: '4px 8px', fontSize: 11 }}
+                          onClick={() => {
+                            if (confirm(`Hapus template "${template.name}"?`)) {
+                              deleteTemplate(template.id);
+                            }
+                          }}
+                        >
+                          🗑
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+        
+        <div className="modal-footer">
+          <button className="fb-btn fb-btn-secondary" onClick={onClose}>Tutup</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ========== ADD BILL MODAL ==========
+function AddBillModal({ period, templates, addTemplate, bill, onSave, onClose }) {
+  const { position, handleMouseDown, modalRef } = useDraggable();
+  const [form, setForm] = useState(bill || {
+    name: '',
+    amount: 0,
+    dueDate: period.start,
+    recurring: false,
+    recurringDays: 0
+  });
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [showAddTemplate, setShowAddTemplate] = useState(false);
+  const [newTemplateName, setNewTemplateName] = useState('');
+  const [newTemplateAmount, setNewTemplateAmount] = useState(0);
+
+  const handleSelectTemplate = (template) => {
+    setForm({ ...form, name: template.name, amount: template.amount });
+    setShowTemplatePicker(false);
+  };
+
+  const handleAddNewTemplate = () => {
+    if (!newTemplateName || newTemplateAmount <= 0) {
+      alert('Lengkapi nama dan jumlah template');
+      return;
+    }
+    addTemplate({ name: newTemplateName, amount: newTemplateAmount });
+    setForm({ ...form, name: newTemplateName, amount: newTemplateAmount });
+    setNewTemplateName('');
+    setNewTemplateAmount(0);
+    setShowAddTemplate(false);
+    setShowTemplatePicker(false);
+  };
+
+  const handleSubmit = () => {
+    if (!form.name || form.amount <= 0) {
+      alert('Lengkapi nama dan jumlah tagihan');
+      return;
+    }
+    onSave(form);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div 
+        className="modal draggable-modal" 
+        ref={modalRef}
+        style={{ transform: `translate(${position.x}px, ${position.y}px)` }} 
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="modal-header" onMouseDown={handleMouseDown}>
+          <h3 className="modal-title">{bill ? 'Edit Simulasi Tagihan' : 'Tambah Tagihan Baru'}</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 28, cursor: 'pointer', color: 'var(--fb-gray)' }}>×</button>
+        </div>
+        
+        <div className="modal-body">
+          {/* Template Picker */}
+          {templates && templates.length > 0 && !bill && (
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>📋 Pilih dari Template</label>
+              <div style={{ position: 'relative' }}>
+                <button 
+                  className="fb-btn fb-btn-secondary" 
+                  style={{ width: '100%', justifyContent: 'flex-start' }}
+                  onClick={() => setShowTemplatePicker(!showTemplatePicker)}
+                >
+                  {form.name ? `✓ ${form.name} (${fmt(form.amount)})` : '📌 Klik untuk pilih template...'}
+                </button>
+                {showTemplatePicker && (
+                  <div style={{ 
+                    position: 'absolute', 
+                    top: '100%', 
+                    left: 0, 
+                    right: 0, 
+                    background: '#fff', 
+                    border: '1px solid var(--fb-border)', 
+                    borderRadius: 8, 
+                    maxHeight: 200, 
+                    overflowY: 'auto',
+                    zIndex: 10,
+                    marginTop: 4
+                  }}>
+                    {templates.map(t => (
+                      <div 
+                        key={t.id}
+                        style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid var(--fb-border)' }}
+                        onClick={() => handleSelectTemplate(t)}
+                        onMouseEnter={e => e.target.style.background = 'var(--fb-gray-light)'}
+                        onMouseLeave={e => e.target.style.background = 'transparent'}
+                      >
+                        <div style={{ fontWeight: 600 }}>{t.name}</div>
+                        <div style={{ fontSize: 12, color: 'var(--fb-text-secondary)' }}>{fmt(t.amount)}</div>
+                      </div>
+                    ))}
+                    {/* Add new template option */}
+                    <div 
+                      style={{ padding: '10px 12px', cursor: 'pointer', background: 'var(--purple-light)' }}
+                      onClick={() => setShowAddTemplate(true)}
+                    >
+                      <div style={{ fontWeight: 600, color: 'var(--purple)' }}>➕ Tambah Template Baru</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Add New Template Inline */}
+          {showAddTemplate && (
+            <div style={{ marginBottom: 16, padding: 12, background: 'var(--purple-light)', borderRadius: 8, border: '1px solid var(--purple)' }}>
+              <h4 style={{ margin: '0 0 8px 0', fontSize: 14 }}>➕ Tambah Template Baru</h4>
+              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+                <input
+                  className="fb-input"
+                  placeholder="Nama template"
+                  value={newTemplateName}
+                  onChange={e => setNewTemplateName(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <input
+                  type="number"
+                  className="fb-input"
+                  placeholder="Jumlah"
+                  value={newTemplateAmount || ''}
+                  onChange={e => setNewTemplateAmount(Number(e.target.value) || 0)}
+                  style={{ width: 120 }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="fb-btn fb-btn-success" style={{ flex: 1 }} onClick={handleAddNewTemplate}>
+                  Simpan & Gunakan
+                </button>
+                <button className="fb-btn fb-btn-secondary" onClick={() => setShowAddTemplate(false)}>
+                  Batal
+                </button>
+              </div>
+            </div>
+          )}
+          
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Nama Tagihan</label>
+            <input
+              className="fb-input"
+              placeholder="Contoh: Listrik, Cicilan, Air..."
+              value={form.name}
+              onChange={e => setForm({ ...form, name: e.target.value })}
+            />
+          </div>
+          
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Jumlah (Rp)</label>
+            <input
+              type="number"
+              className="fb-input"
+              placeholder="Contoh: 500000"
+              value={form.amount || ''}
+              onChange={e => setForm({ ...form, amount: Number(e.target.value) || 0 })}
+            />
+          </div>
+          
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Tanggal Rencana Bayar</label>
+            <input
+              type="date"
+              className="fb-input"
+              value={form.dueDate}
+              onChange={e => setForm({ ...form, dueDate: e.target.value })}
+            />
+          </div>
+          
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <input
+                type="checkbox"
+                checked={form.recurring}
+                onChange={e => setForm({ ...form, recurring: e.target.checked, recurringDays: e.target.checked ? 1 : 0 })}
+              />
+              <span style={{ fontWeight: 600 }}>Berulang?</span>
+            </label>
+            <p style={{ fontSize: 12, color: 'var(--fb-text-secondary)', margin: '4px 0 0 0' }}>
+              Centang jika tagihan ini berulang setiap periode tertentu
+            </p>
+          </div>
+          
+          {form.recurring && (
+            <div style={{ marginBottom: 16, padding: 12, background: 'var(--fb-gray-light)', borderRadius: 8 }}>
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>
+                Ulang setiap berapa hari?
+              </label>
+              <input
+                type="number"
+                className="fb-input"
+                placeholder="1 = setiap hari, 7 = mingguan, 30 = bulanan"
+                value={form.recurringDays || ''}
+                onChange={e => setForm({ ...form, recurringDays: Number(e.target.value) || 0 })}
+              />
+              <p style={{ fontSize: 12, color: 'var(--fb-text-secondary)', margin: '4px 0 0 0' }}>
+                Contoh: 1 = harian, 7 = mingguan, 30 = bulanan
+              </p>
+            </div>
+          )}
+        </div>
+        
+        <div className="modal-footer">
+          <button className="fb-btn fb-btn-secondary" onClick={onClose}>Batal</button>
+          <button className="fb-btn fb-btn-success" onClick={handleSubmit}>Simpan</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ========== EDIT TAGIHAN MODAL (From Calendar) ==========
+function EditTagihanModal({ tagihan, onSave, onTogglePaid, onDelete, onMove, onClose }) {
+  const { position, handleMouseDown, modalRef } = useDraggable();
+  const [form, setForm] = useState({
+    name: tagihan.name,
+    amount: tagihan.amount,
+    dueDate: tagihan.dueDate
+  });
+
+  const handleSubmit = () => {
+    if (!form.name || form.amount <= 0) {
+      alert('Lengkapi nama dan jumlah tagihan');
+      return;
+    }
+    onSave(form);
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div 
+        className="modal draggable-modal" 
+        ref={modalRef}
+        style={{ transform: `translate(${position.x}px, ${position.y}px)` }} 
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="modal-header" onMouseDown={handleMouseDown}>
+          <h3 className="modal-title">📋 Detail Tagihan</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 28, cursor: 'pointer', color: 'var(--fb-gray)' }}>×</button>
+        </div>
+        
+        <div className="modal-body">
+          {/* Status Badge */}
+          <div style={{ marginBottom: 16, textAlign: 'center' }}>
+            <span className={`status-badge ${tagihan.paid ? 'paid' : 'unpaid'}`} style={{ fontSize: 14, padding: '8px 20px' }}>
+              {tagihan.paid ? '✓ Sudah Dibayar' : '⏳ Belum Dibayar'}
+            </span>
+          </div>
+          
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Nama Tagihan</label>
+            <input
+              className="fb-input"
+              placeholder="Nama tagihan"
+              value={form.name}
+              onChange={e => setForm({ ...form, name: e.target.value })}
+            />
+          </div>
+          
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Jumlah (Rp)</label>
+            <input
+              type="number"
+              className="fb-input"
+              placeholder="Jumlah"
+              value={form.amount || ''}
+              onChange={e => setForm({ ...form, amount: Number(e.target.value) || 0 })}
+            />
+          </div>
+          
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Tanggal Jatuh Tempo</label>
+            <input
+              type="date"
+              className="fb-input"
+              value={form.dueDate}
+              onChange={e => setForm({ ...form, dueDate: e.target.value })}
+            />
+          </div>
+        </div>
+        
+        <div className="modal-footer" style={{ flexDirection: 'column', gap: 8 }}>
+          {/* Primary Actions */}
+          <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+            <button 
+              className={`fb-btn ${tagihan.paid ? 'fb-btn-secondary' : 'fb-btn-success'}`} 
+              style={{ flex: 1 }}
+              onClick={onTogglePaid}
+            >
+              {tagihan.paid ? '↩️ Tandai Belum Bayar' : '✓ Tandai Lunas'}
+            </button>
+            <button 
+              className="fb-btn fb-btn-success" 
+              style={{ flex: 1 }}
+              onClick={handleSubmit}
+            >
+              💾 Simpan Edit
+            </button>
+          </div>
+          
+          {/* Secondary Actions */}
+          <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+            <button 
+              className="fb-btn fb-btn-purple" 
+              style={{ flex: 1 }}
+              onClick={onMove}
+            >
+              📤 Pindahkan ke Tgl...
+            </button>
+            <button 
+              className="fb-btn fb-btn-danger" 
+              style={{ flex: 1 }}
+              onClick={() => {
+                if (confirm(`Hapus tagihan "${tagihan.name}"?`)) {
+                  onDelete();
+                }
+              }}
+            >
+              🗑 Hapus
+            </button>
+          </div>
+          
+          <button className="fb-btn fb-btn-secondary" style={{ width: '100%' }} onClick={onClose}>
+            Batal
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ========== MOVE TO DATE MODAL ==========
+function MoveToDateModal({ tagihan, period, tagihanList, onMove, onClose }) {
+  const { position, handleMouseDown, modalRef } = useDraggable();
+  const [newDate, setNewDate] = useState(period.start);
+
+  const handleMove = () => {
+    if (!newDate) {
+      alert('Pilih tanggal tujuan');
+      return;
+    }
+    onMove(newDate);
+  };
+
+  // Check for existing bills with same name on the new date
+  const existingOnNewDate = tagihanList.filter(t => 
+    t.dueDate === newDate && 
+    t.name.toLowerCase() === tagihan.name.toLowerCase() &&
+    t.id !== tagihan.id
+  );
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div 
+        className="modal draggable-modal" 
+        ref={modalRef}
+        style={{ transform: `translate(${position.x}px, ${position.y}px)` }} 
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="modal-header" onMouseDown={handleMouseDown}>
+          <h3 className="modal-title">📤 Pindahkan Tagihan</h3>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 28, cursor: 'pointer', color: 'var(--fb-gray)' }}>×</button>
+        </div>
+        
+        <div className="modal-body">
+          <div style={{ marginBottom: 16, padding: 12, background: 'var(--fb-gray-light)', borderRadius: 8 }}>
+            <div style={{ fontWeight: 600, marginBottom: 4 }}>Tagihan yang akan dipindahkan:</div>
+            <div>{tagihan.name} - {fmt(tagihan.amount)}</div>
+            <div style={{ fontSize: 12, color: 'var(--fb-text-secondary)' }}>
+              Tanggal asal: {idDateFull(tagihan.dueDate)}
+            </div>
+          </div>
+          
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Pilih Tanggal Tujuan</label>
+            <input
+              type="date"
+              className="fb-input"
+              value={newDate}
+              onChange={e => setNewDate(e.target.value)}
+            />
+          </div>
+          
+          {/* Show info about existing bills */}
+          {existingOnNewDate.length > 0 && (
+            <div style={{ marginBottom: 16, padding: 12, background: '#fff3cd', borderRadius: 8, border: '1px solid var(--warning)' }}>
+              <div style={{ fontWeight: 600, marginBottom: 4, color: '#856404' }}>⚠️ Tagihan dengan nama sama ditemukan:</div>
+              {existingOnNewDate.map(t => (
+                <div key={t.id} style={{ fontSize: 13, color: '#856404' }}>
+                  • {t.name}: {fmt(t.amount)}
+                </div>
+              ))}
+              <div style={{ fontSize: 12, color: '#856404', marginTop: 8 }}>
+                💡 Jumlah akan digabung: {fmt(tagihan.amount + existingOnNewDate.reduce((s, t) => s + t.amount, 0))}
+              </div>
+            </div>
+          )}
+          
+          <p style={{ fontSize: 12, color: 'var(--fb-text-secondary)' }}>
+            <strong>Pindahkan</strong> = tagihan dipindahkan ke tanggal tujuan dan dihapus dari tanggal asal.
+            {existingOnNewDate.length > 0 && ' Jika ada tagihan sama, jumlah akan digabung.'}
+          </p>
+        </div>
+        
+        <div className="modal-footer">
+          <button className="fb-btn fb-btn-secondary" onClick={onClose}>Batal</button>
+          <button className="fb-btn fb-btn-purple" onClick={handleMove}>
+            📤 Pindahkan
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ========== RENDER ==========
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
 </html>
