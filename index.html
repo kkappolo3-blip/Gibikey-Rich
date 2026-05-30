@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Gibikey Rich v2.5.4 — Budget Manager (Cloud)</title>
-<meta name="description" content="Gibikey Rich v2.5.4 — Simulasi anggaran dengan Cloud Storage Firebase (Categories, Colors, Undo/Redo, Shortcuts)" />
+<title>Gibikey Rich v2.5.5 — Budget Manager (Cloud)</title>
+<meta name="description" content="Gibikey Rich v2.5.5 — Simulasi anggaran dengan Cloud Storage Firebase (Categories, Colors, Undo/Redo, Shortcuts, Local Backup)" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -501,10 +501,67 @@ const cloud = {
   }
 };
 
-// LocalStorage fallback (only for config and user ID, NOT for data)
+// LocalStorage backup - ALWAYS save here as backup
 const ls = {
-  get: (k, fb) => { try { return JSON.parse(localStorage.getItem('gibikey_' + k)) ?? fb } catch { return fb } },
-  set: (k, v) => localStorage.setItem('gibikey_' + k, JSON.stringify(v))
+  get: (k, fb) => { try { return JSON.parse(localStorage.getItem('gibikey_data_' + k)) ?? fb } catch { return fb } },
+  set: (k, v) => {
+    try {
+      localStorage.setItem('gibikey_data_' + k, JSON.stringify(v));
+      console.log('💾 Local backup saved:', k);
+    } catch (e) {
+      console.error('Local backup error:', e);
+    }
+  }
+};
+
+// Hybrid storage: Local backup + Firebase sync
+const hybridStorage = {
+  // Save to BOTH local and cloud
+  save: async (key, value) => {
+    // ALWAYS save to local backup first
+    ls.set(key, value);
+    
+    // Then try to sync to Firebase
+    if (firebaseDb) {
+      try {
+        const userId = getUserId();
+        await firebaseDb.ref(`users/${userId}/${key}`).set(value);
+        console.log('☁️ Firebase sync success:', key);
+        return { success: true, source: 'cloud' };
+      } catch (e) {
+        console.error('Firebase sync error:', e);
+        return { success: true, source: 'local' }; // Still success because local backup exists
+      }
+    }
+    return { success: true, source: 'local' };
+  },
+  
+  // Load from Firebase first, fallback to local
+  load: async (key) => {
+    // Try Firebase first
+    if (firebaseDb) {
+      try {
+        const userId = getUserId();
+        const snapshot = await firebaseDb.ref(`users/${userId}/${key}`).once('value');
+        const cloudData = snapshot.val();
+        if (cloudData !== null && cloudData !== undefined) {
+          console.log('☁️ Loaded from Firebase:', key, cloudData);
+          // Update local backup
+          ls.set(key, cloudData);
+          return cloudData;
+        }
+      } catch (e) {
+        console.error('Firebase load error:', e);
+      }
+    }
+    
+    // Fallback to local backup
+    const localData = ls.get(key, null);
+    if (localData !== null) {
+      console.log('💾 Loaded from local backup:', key, localData);
+    }
+    return localData;
+  }
 };
 
 // ========== DRAGGABLE HOOK ==========
@@ -787,9 +844,11 @@ function App() {
       setIsConnected(connected);
     });
     
-    // Load all data from Firebase
+    // Load all data - Firebase first, fallback to local backup
     const loadData = async () => {
       try {
+        console.log('🔄 Loading data...');
+        
         const [
           periodData,
           incomesData,
@@ -799,13 +858,13 @@ function App() {
           tagihanData,
           bukuData
         ] = await Promise.all([
-          cloud.get('period'),
-          cloud.get('incomes'),
-          cloud.get('templates'),
-          cloud.get('savedSimulations'),
-          cloud.get('simBills'),
-          cloud.get('tagihan'),
-          cloud.get('bukuPeriode')
+          hybridStorage.load('period'),
+          hybridStorage.load('incomes'),
+          hybridStorage.load('templates'),
+          hybridStorage.load('savedSimulations'),
+          hybridStorage.load('simBills'),
+          hybridStorage.load('tagihan'),
+          hybridStorage.load('bukuPeriode')
         ]);
         
         if (periodData) setPeriod(periodData);
@@ -818,10 +877,14 @@ function App() {
         
         setIsCloudReady(true);
         isInitialLoadDone.current = true; // Mark initial load complete
-        console.log('Data loaded from Firebase:', { templates: templatesData, savedSimulations: savedSimData, simBills: simBillsData });
+        console.log('✅ Data loaded:', { 
+          templates: templatesData?.length || 0, 
+          savedSimulations: savedSimData?.length || 0, 
+          simBills: simBillsData?.length || 0 
+        });
       } catch (e) {
         console.error('Failed to load data:', e);
-        showToast('Gagal memuat data dari cloud', 'error');
+        showToast('Gagal memuat data', 'error');
       } finally {
         setIsLoading(false);
       }
@@ -834,50 +897,49 @@ function App() {
     };
   }, []);
   
-  // ========== PERSIST TO CLOUD WITH AUTO-SAVE INDICATOR ==========
-  const saveToCloud = async (key, value) => {
+  // ========== PERSIST TO HYBRID STORAGE ==========
+  const saveData = async (key, value) => {
     // Only save after initial load is complete
     if (!isInitialLoadDone.current) return;
-    if (!isCloudReady || !hasConfig) return;
+    
     setSaveStatus('saving');
-    try {
-      await cloud.set(key, value);
+    const result = await hybridStorage.save(key, value);
+    
+    if (result.success) {
       setSaveStatus('saved');
-      console.log('Saved to Firebase:', key, value);
-    } catch (e) {
-      console.error('Save error:', key, e);
+    } else {
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('saved'), 2000);
     }
   };
   
   useEffect(() => {
-    saveToCloud('period', period);
-  }, [period, isCloudReady, hasConfig]);
+    saveData('period', period);
+  }, [period]);
   
   useEffect(() => {
-    saveToCloud('incomes', incomes);
-  }, [incomes, isCloudReady, hasConfig]);
+    saveData('incomes', incomes);
+  }, [incomes]);
   
   useEffect(() => {
-    saveToCloud('templates', templates);
-  }, [templates, isCloudReady, hasConfig]);
+    saveData('templates', templates);
+  }, [templates]);
   
   useEffect(() => {
-    saveToCloud('savedSimulations', savedSimulations);
-  }, [savedSimulations, isCloudReady, hasConfig]);
+    saveData('savedSimulations', savedSimulations);
+  }, [savedSimulations]);
   
   useEffect(() => {
-    saveToCloud('simBills', simBills);
-  }, [simBills, isCloudReady, hasConfig]);
+    saveData('simBills', simBills);
+  }, [simBills]);
   
   useEffect(() => {
-    saveToCloud('tagihan', tagihan);
-  }, [tagihan, isCloudReady, hasConfig]);
+    saveData('tagihan', tagihan);
+  }, [tagihan]);
   
   useEffect(() => {
-    saveToCloud('bukuPeriode', bukuPeriode);
-  }, [bukuPeriode, isCloudReady, hasConfig]);
+    saveData('bukuPeriode', bukuPeriode);
+  }, [bukuPeriode]);
   
   // ========== INCOME HANDLERS ==========
   const addIncome = () => {
@@ -1304,7 +1366,7 @@ function App() {
     const sisa = totalIncome - totalSimBills;
     summary += `  • Sisa: ${fmt(sisa)}\n`;
     summary += `━━━━━━━━━━━━━━━━━━━━━\n`;
-    summary += `_Generated by Gibikey Rich v2.5.4 (Cloud)_`;
+    summary += `_Generated by Gibikey Rich v2.5.5 (Hybrid Storage)_`;
     
     return summary;
   };
@@ -1334,7 +1396,7 @@ function App() {
         <div className="loading-screen">
           <div className="spinner" />
           <h2 style={{ marginTop: 20 }}>Menghubungkan ke Cloud...</h2>
-          <p style={{ opacity: 0.8, marginTop: 8 }}>Gibikey Rich v2.5.4</p>
+          <p style={{ opacity: 0.8, marginTop: 8 }}>Gibikey Rich v2.5.5</p>
         </div>
       )}
       
@@ -1368,7 +1430,7 @@ function App() {
               <div>
                 <h1 style={{ margin: 0 }}>Gibikey Rich</h1>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 10, color: 'var(--fb-text-secondary)' }}>v2.5.3</span>
+                  <span style={{ fontSize: 10, color: 'var(--fb-text-secondary)' }}>v2.5.5</span>
                   <span className={`cloud-status ${isConnected ? 'connected' : 'disconnected'}`} style={{ fontSize: 9, padding: '2px 6px' }}>
                     {isConnected ? '☁️ Online' : '⏳'}
                   </span>
