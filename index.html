@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Gibikey Rich v2.5 — Budget Manager (Cloud)</title>
-<meta name="description" content="Gibikey Rich v2.5 — Simulasi anggaran dengan Cloud Storage Firebase (Built-in Settings)" />
+<title>Gibikey Rich v2.5.3 — Budget Manager (Cloud)</title>
+<meta name="description" content="Gibikey Rich v2.5.3 — Simulasi anggaran dengan Cloud Storage Firebase (Categories, Colors, Undo/Redo, Shortcuts)" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -175,6 +175,64 @@
   .config-field { margin-bottom: 16px; }
   .config-field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--fb-text); }
   .config-field .hint { font-size: 11px; color: var(--fb-text-secondary); margin-top: 4px; }
+  
+  /* ========== 31 COLORS FOR COLOR CODING ========== */
+  :root {
+    --color-1: #e74c3c; --color-2: #e67e22; --color-3: #f1c40f; --color-4: #2ecc71; --color-5: #1abc9c;
+    --color-6: #16a085; --color-7: #3498db; --color-8: #2980b9; --color-9: #9b59b6; --color-10: #8e44ad;
+    --color-11: #e91e63; --color-12: #00bcd4; --color-13: #009688; --color-14: #4caf50; --color-15: #8bc34a;
+    --color-16: #cddc39; --color-17: #ffeb3b; --color-18: #ffc107; --color-19: #ff9800; --color-20: #ff5722;
+    --color-21: #795548; --color-22: #9e9e9e; --color-23: #607d8b; --color-24: #3f51b5; --color-25: #673ab7;
+    --color-26: #00bcd4; --color-27: #03a9f4; --color-28: #2196f3; --color-29: #ff4081; --color-30: #7c4dff;
+    --color-31: #18ffff;
+  }
+  .color-tag { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; }
+  
+  /* ========== SMOOTH ANIMATIONS ========== */
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes scaleIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  
+  .fade-in { animation: fadeIn 0.3s ease-out; }
+  .slide-up { animation: slideUp 0.3s ease-out; }
+  .scale-in { animation: scaleIn 0.2s ease-out; }
+  
+  .modal-overlay { animation: fadeIn 0.2s ease-out; }
+  .modal { animation: slideUp 0.3s ease-out; }
+  .bill-card { transition: all 0.25s ease; }
+  .bill-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+  .fb-btn { transition: all 0.2s ease; }
+  .fb-btn:hover { transform: translateY(-1px); }
+  .fb-btn:active { transform: translateY(0); }
+  
+  /* ========== AUTO-SAVE INDICATOR ========== */
+  .auto-save-indicator { position: fixed; top: 10px; right: 10px; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 500; z-index: 100; display: flex; align-items: center; gap: 6px; transition: all 0.3s ease; }
+  .auto-save-indicator.saving { background: #fff3cd; color: #856404; }
+  .auto-save-indicator.saved { background: #d4edda; color: #155724; }
+  .auto-save-indicator.error { background: #f8d7da; color: #721c24; }
+  .auto-save-indicator .spinner { width: 12px; height: 12px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+  
+  /* ========== UNDO/REDO BUTTONS ========== */
+  .undo-redo-bar { display: flex; gap: 4px; align-items: center; }
+  .undo-redo-btn { background: #fff; border: 1px solid var(--fb-border); border-radius: 6px; padding: 6px 10px; cursor: pointer; transition: all 0.2s; font-size: 14px; }
+  .undo-redo-btn:hover:not(:disabled) { background: var(--fb-gray-light); }
+  .undo-redo-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  
+  /* ========== KEYBOARD SHORTCUTS HELP ========== */
+  .shortcuts-help { position: fixed; bottom: 20px; right: 20px; background: #fff; border-radius: 8px; padding: 12px 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); font-size: 11px; z-index: 90; }
+  .shortcuts-help kbd { background: var(--fb-gray-light); padding: 2px 6px; border-radius: 4px; font-family: monospace; border: 1px solid var(--fb-border); }
+  
+  /* ========== CATEGORY BADGE ========== */
+  .category-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; text-transform: uppercase; }
+  
+  /* ========== COLOR PICKER ========== */
+  .color-picker { display: flex; flex-wrap: wrap; gap: 4px; max-width: 200px; }
+  .color-option { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s; }
+  .color-option:hover { transform: scale(1.2); }
+  .color-option.selected { border-color: #333; }
 </style>
 </head>
 <body>
@@ -234,6 +292,121 @@ const getMonthDates = (year, month) => {
   }
   return dates;
 };
+
+// ========== CATEGORIES & COLORS ==========
+const CATEGORIES = [
+  { id: 'wajib', name: 'Wajib', icon: '🏠', color: 1 },
+  { id: 'listrik', name: 'Listrik', icon: '⚡', color: 2 },
+  { id: 'air', name: 'Air', icon: '💧', color: 3 },
+  { id: 'internet', name: 'Internet', icon: '📶', color: 4 },
+  { id: 'telepon', name: 'Telepon', icon: '📱', color: 5 },
+  { id: 'sewa', name: 'Sewa', icon: '🏢', color: 6 },
+  { id: 'kendaraan', name: 'Kendaraan', icon: '🚗', color: 7 },
+  { id: 'pendidikan', name: 'Pendidikan', icon: '📚', color: 8 },
+  { id: 'kesehatan', name: 'Kesehatan', icon: '🏥', color: 9 },
+  { id: 'makanan', name: 'Makanan', icon: '🍔', color: 10 },
+  { id: 'hiburan', name: 'Hiburan', icon: '🎬', color: 11 },
+  { id: 'belanja', name: 'Belanja', icon: '🛒', color: 12 },
+  { id: 'asuransi', name: 'Asuransi', icon: '🛡️', color: 13 },
+  { id: 'investasi', name: 'Investasi', icon: '📈', color: 14 },
+  { id: 'lainnya', name: 'Lainnya', icon: '📦', color: 15 }
+];
+
+const COLORS = [
+  '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c',
+  '#16a085', '#3498db', '#2980b9', '#9b59b6', '#8e44ad',
+  '#e91e63', '#00bcd4', '#009688', '#4caf50', '#8bc34a',
+  '#cddc39', '#ffeb3b', '#ffc107', '#ff9800', '#ff5722',
+  '#795548', '#9e9e9e', '#607d8b', '#3f51b5', '#673ab7',
+  '#00bcd4', '#03a9f4', '#2196f3', '#ff4081', '#7c4dff',
+  '#18ffff'
+];
+
+const getCategoryById = (id) => CATEGORIES.find(c => c.id === id) || CATEGORIES[CATEGORIES.length - 1];
+const getColorHex = (colorIndex) => COLORS[(colorIndex - 1) % COLORS.length] || COLORS[0];
+
+// ========== UNDO/REDO HOOK ==========
+function useUndoRedo(initialState, maxHistory = 50) {
+  const [state, setState] = useState(initialState);
+  const [history, setHistory] = useState([initialState]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  
+  const setStateWithHistory = useCallback((newState) => {
+    const actualNewState = typeof newState === 'function' ? newState(state) : newState;
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(actualNewState);
+    if (newHistory.length > maxHistory) newHistory.shift();
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+    setState(actualNewState);
+  }, [state, history, historyIndex, maxHistory]);
+  
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setState(history[newIndex]);
+    }
+  }, [history, historyIndex]);
+  
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setState(history[newIndex]);
+    }
+  }, [history, historyIndex]);
+  
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+  
+  return [state, setStateWithHistory, undo, redo, canUndo, canRedo];
+}
+
+// ========== KEYBOARD SHORTCUTS HOOK ==========
+function useKeyboardShortcuts(shortcuts) {
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Don't trigger shortcuts when typing in inputs
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        // Only allow Escape key
+        if (e.key === 'Escape') {
+          shortcuts['Escape']?.();
+        }
+        return;
+      }
+      
+      const key = e.key.toLowerCase();
+      const ctrl = e.ctrlKey || e.metaKey;
+      const shift = e.shiftKey;
+      
+      // Check for Ctrl+Key combinations
+      if (ctrl) {
+        const combo = `ctrl+${key}`;
+        if (shortcuts[combo]) {
+          e.preventDefault();
+          shortcuts[combo]();
+          return;
+        }
+      }
+      
+      // Check for simple key presses
+      if (shortcuts[key]) {
+        e.preventDefault();
+        shortcuts[key]();
+      }
+      
+      // Check for Escape
+      if (e.key === 'Escape' && shortcuts['Escape']) {
+        e.preventDefault();
+        shortcuts['Escape']();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [shortcuts]);
+}
 
 // ========== FIREBASE SERVICE ==========
 // Get or create a unique user ID (stored only for identification, NOT for data)
@@ -523,6 +696,9 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [showFirebaseSettings, setShowFirebaseSettings] = useState(false);
   
+  // Auto-save indicator state
+  const [saveStatus, setSaveStatus] = useState('saved'); // 'saving', 'saved', 'error'
+  
   // Cloud state
   const [isCloudReady, setIsCloudReady] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -560,6 +736,31 @@ function App() {
   const [editingTagihan, setEditingTagihan] = useState(null);
   const [moveTagihan, setMoveTagihan] = useState(null);
   const [showTemplateManager, setShowTemplateManager] = useState(false);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  
+  // ========== KEYBOARD SHORTCUTS ==========
+  const closeAllModals = useCallback(() => {
+    setEditingSimBill(null);
+    setEditingTagihan(null);
+    setMoveTagihan(null);
+    setShowTemplateManager(false);
+    setShowSettings(false);
+    setShowFirebaseSettings(false);
+    setShowShortcutsHelp(false);
+    setShowAddBillModal(false);
+  }, []);
+  
+  useKeyboardShortcuts({
+    'Escape': closeAllModals,
+    'n': () => !editingSimBill && !editingTagihan && setEditingSimBill({}),
+    't': () => !showTemplateManager && setShowTemplateManager(true),
+    's': () => !editingSimBill && !editingTagihan && setSubTab('simulasi'),
+    'k': () => !editingSimBill && !editingTagihan && setSubTab('kalender'),
+    'b': () => !editingSimBill && !editingTagihan && setSubTab('buku-periode'),
+    '?': () => setShowShortcutsHelp(prev => !prev),
+    'ctrl+z': () => {}, // Placeholder - undo handled separately
+    'ctrl+y': () => {}, // Placeholder - redo handled separately
+  });
   
   // ========== INITIALIZE FIREBASE ==========
   useEffect(() => {
@@ -628,47 +829,45 @@ function App() {
     };
   }, []);
   
-  // ========== PERSIST TO CLOUD ==========
-  useEffect(() => {
-    if (isCloudReady && hasConfig) {
-      cloud.set('period', period);
+  // ========== PERSIST TO CLOUD WITH AUTO-SAVE INDICATOR ==========
+  const saveToCloud = async (key, value) => {
+    if (!isCloudReady || !hasConfig) return;
+    setSaveStatus('saving');
+    try {
+      await cloud.set(key, value);
+      setSaveStatus('saved');
+    } catch (e) {
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('saved'), 2000);
     }
+  };
+  
+  useEffect(() => {
+    saveToCloud('period', period);
   }, [period, isCloudReady, hasConfig]);
   
   useEffect(() => {
-    if (isCloudReady && hasConfig) {
-      cloud.set('incomes', incomes);
-    }
+    saveToCloud('incomes', incomes);
   }, [incomes, isCloudReady, hasConfig]);
   
   useEffect(() => {
-    if (isCloudReady && hasConfig) {
-      cloud.set('templates', templates);
-    }
+    saveToCloud('templates', templates);
   }, [templates, isCloudReady, hasConfig]);
   
   useEffect(() => {
-    if (isCloudReady && hasConfig) {
-      cloud.set('savedSimulations', savedSimulations);
-    }
+    saveToCloud('savedSimulations', savedSimulations);
   }, [savedSimulations, isCloudReady, hasConfig]);
   
   useEffect(() => {
-    if (isCloudReady && hasConfig) {
-      cloud.set('simBills', simBills);
-    }
+    saveToCloud('simBills', simBills);
   }, [simBills, isCloudReady, hasConfig]);
   
   useEffect(() => {
-    if (isCloudReady && hasConfig) {
-      cloud.set('tagihan', tagihan);
-    }
+    saveToCloud('tagihan', tagihan);
   }, [tagihan, isCloudReady, hasConfig]);
   
   useEffect(() => {
-    if (isCloudReady && hasConfig) {
-      cloud.set('bukuPeriode', bukuPeriode);
-    }
+    saveToCloud('bukuPeriode', bukuPeriode);
   }, [bukuPeriode, isCloudReady, hasConfig]);
   
   // ========== INCOME HANDLERS ==========
@@ -1096,7 +1295,7 @@ function App() {
     const sisa = totalIncome - totalSimBills;
     summary += `  • Sisa: ${fmt(sisa)}\n`;
     summary += `━━━━━━━━━━━━━━━━━━━━━\n`;
-    summary += `_Generated by Gibikey Rich v2.5 (Cloud)_`;
+    summary += `_Generated by Gibikey Rich v2.5.3 (Cloud)_`;
     
     return summary;
   };
@@ -1126,7 +1325,7 @@ function App() {
         <div className="loading-screen">
           <div className="spinner" />
           <h2 style={{ marginTop: 20 }}>Menghubungkan ke Cloud...</h2>
-          <p style={{ opacity: 0.8, marginTop: 8 }}>Gibikey Rich v2.5</p>
+          <p style={{ opacity: 0.8, marginTop: 8 }}>Gibikey Rich v2.5.3</p>
         </div>
       )}
       
@@ -1160,7 +1359,7 @@ function App() {
               <div>
                 <h1 style={{ margin: 0 }}>Gibikey Rich</h1>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 10, color: 'var(--fb-text-secondary)' }}>v2.5 Cloud</span>
+                  <span style={{ fontSize: 10, color: 'var(--fb-text-secondary)' }}>v2.5.3</span>
                   <span className={`cloud-status ${isConnected ? 'connected' : 'disconnected'}`} style={{ fontSize: 9, padding: '2px 6px' }}>
                     {isConnected ? '☁️ Online' : '⏳'}
                   </span>
@@ -1214,7 +1413,7 @@ function App() {
               style={{ width: '100%', fontSize: 12, padding: '8px', marginBottom: 8 }}
               onClick={() => {
                 const data = {
-                  version: '2.5-cloud',
+                  version: '2.5.3-cloud',
                   exportedAt: new Date().toISOString(),
                   userId: getUserId(),
                   period: period,
@@ -1301,7 +1500,16 @@ function App() {
             <div className="header-bar" style={{ margin: -20, marginBottom: 20, padding: 16 }}>
               <div style={{ maxWidth: 1200, margin: '0 auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                  <h2 style={{ margin: 0, fontSize: 24 }}>📊 Budget Manager</h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <h2 style={{ margin: 0, fontSize: 24 }}>📊 Budget Manager</h2>
+                    <button 
+                      onClick={() => setShowShortcutsHelp(true)}
+                      style={{ background: 'var(--fb-gray-light)', border: 'none', borderRadius: '50%', width: 28, height: 28, cursor: 'pointer', fontSize: 14, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      title="Keyboard Shortcuts"
+                    >
+                      ?
+                    </button>
+                  </div>
                   {subTab === 'simulasi' && (
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       <button className="fb-btn fb-btn-purple" onClick={() => setShowTemplateManager(true)}>
@@ -1559,6 +1767,65 @@ function App() {
                   }} existingConfig={getFirebaseConfig()} />
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Keyboard Shortcuts Help Modal */}
+          {showShortcutsHelp && (
+            <div className="modal-overlay" onClick={() => setShowShortcutsHelp(false)}>
+              <div className="modal scale-in" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '400px' }}>
+                <div className="modal-header">
+                  <h3 className="modal-title">⌨️ Keyboard Shortcuts</h3>
+                  <button onClick={() => setShowShortcutsHelp(false)} style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer' }}>×</button>
+                </div>
+                <div className="modal-body">
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Tambah tagihan baru</span>
+                      <kbd style={{ background: 'var(--fb-gray-light)', padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>N</kbd>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Buka template</span>
+                      <kbd style={{ background: 'var(--fb-gray-light)', padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>T</kbd>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Tab Simulasi</span>
+                      <kbd style={{ background: 'var(--fb-gray-light)', padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>S</kbd>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Tab Kalender</span>
+                      <kbd style={{ background: 'var(--fb-gray-light)', padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>K</kbd>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Tab Buku Periode</span>
+                      <kbd style={{ background: 'var(--fb-gray-light)', padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>B</kbd>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Tampilkan bantuan</span>
+                      <kbd style={{ background: 'var(--fb-gray-light)', padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>?</kbd>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span>Tutup modal</span>
+                      <kbd style={{ background: 'var(--fb-gray-light)', padding: '2px 8px', borderRadius: 4, fontFamily: 'monospace' }}>Esc</kbd>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Auto-Save Indicator */}
+          {hasConfig && (
+            <div className={`auto-save-indicator ${saveStatus}`}>
+              {saveStatus === 'saving' && (
+                <><div className="spinner" /> Menyimpan...</>
+              )}
+              {saveStatus === 'saved' && (
+                <>✅ Tersimpan</>
+              )}
+              {saveStatus === 'error' && (
+                <>❌ Gagal menyimpan</>
+              )}
             </div>
           )}
 
@@ -2230,28 +2497,23 @@ function AddBillModal({ period, templates, addTemplate, bill, onSave, onClose })
     amount: 0,
     dueDate: period.start,
     recurring: false,
-    recurringDays: 0
+    recurringDays: 0,
+    category: 'lainnya',
+    color: Math.floor(Math.random() * 31) + 1
   });
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
-  const [showAddTemplate, setShowAddTemplate] = useState(false);
-  const [newTemplateName, setNewTemplateName] = useState('');
-  const [newTemplateAmount, setNewTemplateAmount] = useState(0);
+  const [saveAsTemplate, setSaveAsTemplate] = useState(false);
 
   const handleSelectTemplate = (template) => {
-    setForm({ ...form, name: template.name, amount: template.amount });
-    setShowTemplatePicker(false);
-  };
-
-  const handleAddNewTemplate = () => {
-    if (!newTemplateName || newTemplateAmount <= 0) {
-      alert('Lengkapi nama dan jumlah template');
-      return;
-    }
-    addTemplate({ name: newTemplateName, amount: newTemplateAmount });
-    setForm({ ...form, name: newTemplateName, amount: newTemplateAmount });
-    setNewTemplateName('');
-    setNewTemplateAmount(0);
-    setShowAddTemplate(false);
+    setForm({ 
+      ...form, 
+      name: template.name, 
+      amount: template.amount, 
+      category: template.category || 'lainnya',
+      color: template.color || Math.floor(Math.random() * 31) + 1,
+      recurring: template.recurring || false,
+      recurringDays: template.recurringDays || 0
+    });
     setShowTemplatePicker(false);
   };
 
@@ -2260,19 +2522,47 @@ function AddBillModal({ period, templates, addTemplate, bill, onSave, onClose })
       alert('Lengkapi nama dan jumlah tagihan');
       return;
     }
+    // Save as template if checked
+    if (saveAsTemplate && !bill) {
+      const existingTemplate = templates?.find(t => t.name.toLowerCase() === form.name.toLowerCase());
+      if (!existingTemplate) {
+        addTemplate({
+          name: form.name,
+          amount: form.amount,
+          category: form.category,
+          color: form.color,
+          recurring: form.recurring,
+          recurringDays: form.recurringDays
+        });
+      }
+    }
     onSave(form);
   };
+
+  // ESC key handler
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  const category = getCategoryById(form.category);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div 
-        className="modal draggable-modal" 
+        className="modal draggable-modal scale-in" 
         ref={modalRef}
-        style={{ transform: `translate(${position.x}px, ${position.y}px)` }} 
+        style={{ transform: `translate(${position.x}px, ${position.y}px)`, maxWidth: '500px' }} 
         onClick={e => e.stopPropagation()}
       >
         <div className="modal-header" onMouseDown={handleMouseDown}>
-          <h3 className="modal-title">{bill ? 'Edit Simulasi Tagihan' : 'Tambah Tagihan Baru'}</h3>
+          <h3 className="modal-title">
+            <span className="color-tag" style={{ background: getColorHex(form.color) }} />
+            {bill ? 'Edit Simulasi Tagihan' : 'Tambah Tagihan Baru'}
+          </h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', fontSize: 28, cursor: 'pointer', color: 'var(--fb-gray)' }}>×</button>
         </div>
         
@@ -2290,7 +2580,7 @@ function AddBillModal({ period, templates, addTemplate, bill, onSave, onClose })
                   {form.name ? `✓ ${form.name} (${fmt(form.amount)})` : '📌 Klik untuk pilih template...'}
                 </button>
                 {showTemplatePicker && (
-                  <div style={{ 
+                  <div className="slide-up" style={{ 
                     position: 'absolute', 
                     top: '100%', 
                     left: 0, 
@@ -2301,64 +2591,61 @@ function AddBillModal({ period, templates, addTemplate, bill, onSave, onClose })
                     maxHeight: 200, 
                     overflowY: 'auto',
                     zIndex: 10,
-                    marginTop: 4
+                    marginTop: 4,
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
                   }}>
-                    {templates.map(t => (
-                      <div 
-                        key={t.id}
-                        style={{ padding: '10px 12px', cursor: 'pointer', borderBottom: '1px solid var(--fb-border)' }}
-                        onClick={() => handleSelectTemplate(t)}
-                        onMouseEnter={e => e.target.style.background = 'var(--fb-gray-light)'}
-                        onMouseLeave={e => e.target.style.background = 'transparent'}
-                      >
-                        <div style={{ fontWeight: 600 }}>{t.name}</div>
-                        <div style={{ fontSize: 12, color: 'var(--fb-text-secondary)' }}>{fmt(t.amount)}</div>
-                      </div>
-                    ))}
-                    {/* Add new template option */}
-                    <div 
-                      style={{ padding: '10px 12px', cursor: 'pointer', background: 'var(--purple-light)' }}
-                      onClick={() => setShowAddTemplate(true)}
-                    >
-                      <div style={{ fontWeight: 600, color: 'var(--purple)' }}>➕ Tambah Template Baru</div>
-                    </div>
+                    {templates.map(t => {
+                      const cat = getCategoryById(t.category);
+                      return (
+                        <div 
+                          key={t.id}
+                          className="bill-card"
+                          style={{ padding: '10px 12px', cursor: 'pointer', margin: 4, borderLeftWidth: 3, borderLeftColor: getColorHex(t.color || cat.color) }}
+                          onClick={() => handleSelectTemplate(t)}
+                        >
+                          <div style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span>{cat.icon}</span> {t.name}
+                          </div>
+                          <div style={{ fontSize: 12, color: 'var(--fb-text-secondary)' }}>
+                            {fmt(t.amount)} {t.recurring ? `• tiap ${t.recurringDays} hari` : ''}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          {/* Add New Template Inline */}
-          {showAddTemplate && (
-            <div style={{ marginBottom: 16, padding: 12, background: 'var(--purple-light)', borderRadius: 8, border: '1px solid var(--purple)' }}>
-              <h4 style={{ margin: '0 0 8px 0', fontSize: 14 }}>➕ Tambah Template Baru</h4>
-              <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-                <input
-                  className="fb-input"
-                  placeholder="Nama template"
-                  value={newTemplateName}
-                  onChange={e => setNewTemplateName(e.target.value)}
-                  style={{ flex: 1 }}
-                />
-                <input
-                  type="number"
-                  className="fb-input"
-                  placeholder="Jumlah"
-                  value={newTemplateAmount || ''}
-                  onChange={e => setNewTemplateAmount(Number(e.target.value) || 0)}
-                  style={{ width: 120 }}
-                />
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button className="fb-btn fb-btn-success" style={{ flex: 1 }} onClick={handleAddNewTemplate}>
-                  Simpan & Gunakan
-                </button>
-                <button className="fb-btn fb-btn-secondary" onClick={() => setShowAddTemplate(false)}>
-                  Batal
-                </button>
+          {/* Category & Color */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+            <div>
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>📁 Kategori</label>
+              <select
+                className="fb-input"
+                value={form.category}
+                onChange={e => setForm({ ...form, category: e.target.value })}
+              >
+                {CATEGORIES.map(cat => (
+                  <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>🎨 Warna</label>
+              <div className="color-picker" style={{ maxWidth: '100%' }}>
+                {COLORS.slice(0, 15).map((color, idx) => (
+                  <div
+                    key={idx}
+                    className={`color-option ${form.color === idx + 1 ? 'selected' : ''}`}
+                    style={{ background: color }}
+                    onClick={() => setForm({ ...form, color: idx + 1 })}
+                  />
+                ))}
               </div>
             </div>
-          )}
+          </div>
           
           <div style={{ marginBottom: 16 }}>
             <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Nama Tagihan</label>
@@ -2367,6 +2654,7 @@ function AddBillModal({ period, templates, addTemplate, bill, onSave, onClose })
               placeholder="Contoh: Listrik, Cicilan, Air..."
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
+              autoFocus
             />
           </div>
           
@@ -2391,42 +2679,79 @@ function AddBillModal({ period, templates, addTemplate, bill, onSave, onClose })
             />
           </div>
           
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+          {/* Recurring Section */}
+          <div style={{ marginBottom: 16, padding: 12, background: 'var(--fb-gray-light)', borderRadius: 8 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontWeight: 600 }}>
               <input
                 type="checkbox"
                 checked={form.recurring}
-                onChange={e => setForm({ ...form, recurring: e.target.checked, recurringDays: e.target.checked ? 1 : 0 })}
+                onChange={e => setForm({ ...form, recurring: e.target.checked, recurringDays: e.target.checked ? 30 : 0 })}
               />
-              <span style={{ fontWeight: 600 }}>Berulang?</span>
+              <span>🔄 Tagihan Berulang</span>
             </label>
-            <p style={{ fontSize: 12, color: 'var(--fb-text-secondary)', margin: '4px 0 0 0' }}>
-              Centang jika tagihan ini berulang setiap periode tertentu
-            </p>
+            
+            {form.recurring && (
+              <div style={{ marginTop: 12, animation: 'slideDown 0.2s ease' }}>
+                <label style={{ display: 'block', marginBottom: 6, fontSize: 13 }}>Ulang setiap:</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button 
+                    className={`fb-btn ${form.recurringDays === 1 ? '' : 'fb-btn-secondary'}`}
+                    style={{ flex: 1, fontSize: 12, padding: '8px 4px' }}
+                    onClick={() => setForm({ ...form, recurringDays: 1 })}
+                  >
+                    Harian
+                  </button>
+                  <button 
+                    className={`fb-btn ${form.recurringDays === 7 ? '' : 'fb-btn-secondary'}`}
+                    style={{ flex: 1, fontSize: 12, padding: '8px 4px' }}
+                    onClick={() => setForm({ ...form, recurringDays: 7 })}
+                  >
+                    Mingguan
+                  </button>
+                  <button 
+                    className={`fb-btn ${form.recurringDays === 30 ? '' : 'fb-btn-secondary'}`}
+                    style={{ flex: 1, fontSize: 12, padding: '8px 4px' }}
+                    onClick={() => setForm({ ...form, recurringDays: 30 })}
+                  >
+                    Bulanan
+                  </button>
+                </div>
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 12 }}>Atau custom:</span>
+                  <input
+                    type="number"
+                    className="fb-input"
+                    style={{ width: 80 }}
+                    value={form.recurringDays || ''}
+                    onChange={e => setForm({ ...form, recurringDays: Number(e.target.value) || 0 })}
+                    placeholder="hari"
+                  />
+                  <span style={{ fontSize: 12 }}>hari</span>
+                </div>
+              </div>
+            )}
           </div>
           
-          {form.recurring && (
-            <div style={{ marginBottom: 16, padding: 12, background: 'var(--fb-gray-light)', borderRadius: 8 }}>
-              <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>
-                Ulang setiap berapa hari?
-              </label>
+          {/* Save as Template Option */}
+          {!bill && (
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', padding: 12, background: 'var(--purple-light)', borderRadius: 8, border: '1px solid var(--purple)' }}>
               <input
-                type="number"
-                className="fb-input"
-                placeholder="1 = setiap hari, 7 = mingguan, 30 = bulanan"
-                value={form.recurringDays || ''}
-                onChange={e => setForm({ ...form, recurringDays: Number(e.target.value) || 0 })}
+                type="checkbox"
+                checked={saveAsTemplate}
+                onChange={e => setSaveAsTemplate(e.target.checked)}
               />
-              <p style={{ fontSize: 12, color: 'var(--fb-text-secondary)', margin: '4px 0 0 0' }}>
-                Contoh: 1 = harian, 7 = mingguan, 30 = bulanan
-              </p>
-            </div>
+              <span style={{ fontWeight: 600, color: 'var(--purple)' }}>📋 Simpan juga sebagai template</span>
+            </label>
           )}
         </div>
         
         <div className="modal-footer">
-          <button className="fb-btn fb-btn-secondary" onClick={onClose}>Batal</button>
-          <button className="fb-btn fb-btn-success" onClick={handleSubmit}>Simpan</button>
+          <button className="fb-btn fb-btn-secondary" onClick={onClose}>
+            Batal <kbd style={{ marginLeft: 4, fontSize: 10 }}>Esc</kbd>
+          </button>
+          <button className="fb-btn fb-btn-success" onClick={handleSubmit}>
+            💾 Simpan
+          </button>
         </div>
       </div>
     </div>
