@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Gibikey Config — Firebase Setup</title>
+<meta name="description" content="Konfigurasi Firebase untuk Gibikey Rich" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  :root {
+    --fb-blue: #1877f2;
+    --fb-blue-hover: #166fe5;
+    --fb-green: #31a24c;
+    --fb-gray: #65676b;
+    --fb-gray-light: #f0f2f5;
+    --fb-border: #dddfe2;
+    --danger: #e41e3f;
+    --success: #31a24c;
+    --warning: #f7931e;
+    --purple: #7c3aed;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--fb-gray-light); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; min-height: 100vh; }
+  
+  .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+  
+  .card { background: #fff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); padding: 24px; margin-bottom: 20px; }
+  
+  .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--fb-border); }
+  .card-header .icon { font-size: 32px; }
+  .card-header h1 { margin: 0; font-size: 20px; color: var(--fb-blue); }
+  .card-header .version { font-size: 12px; color: var(--fb-gray); }
+  
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+  .form-group input, .form-group textarea { width: 100%; padding: 12px; border: 1px solid var(--fb-border); border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+  .form-group input:focus, .form-group textarea:focus { border-color: var(--fb-blue); box-shadow: 0 0 0 3px rgba(24,119,242,0.2); }
+  .form-group textarea { min-height: 120px; font-family: monospace; }
+  .form-group .hint { font-size: 12px; color: var(--fb-gray); margin-top: 4px; }
+  
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-primary { background: var(--fb-blue); color: #fff; }
+  .btn-primary:hover { background: var(--fb-blue-hover); }
+  .btn-success { background: var(--fb-green); color: #fff; }
+  .btn-success:hover { background: #2d9144; }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #c41936; }
+  .btn-secondary { background: #e4e6eb; color: var(--fb-text); }
+  .btn-secondary:hover { background: #d8dadf; }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  
+  .status-box { padding: 16px; border-radius: 8px; margin-bottom: 16px; }
+  .status-box.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+  .status-box.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+  .status-box.info { background: #cce5ff; color: #004085; border: 1px solid #b8daff; }
+  .status-box.warning { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+  
+  .step { display: flex; gap: 12px; margin-bottom: 16px; padding: 12px; background: var(--fb-gray-light); border-radius: 8px; }
+  .step-number { width: 28px; height: 28px; background: var(--fb-blue); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex-shrink: 0; }
+  .step-content { flex: 1; }
+  .step-content h4 { margin: 0 0 4px 0; font-size: 14px; }
+  .step-content p { margin: 0; font-size: 13px; color: var(--fb-gray); }
+  
+  .code-box { background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px; font-family: monospace; font-size: 12px; overflow-x: auto; margin: 12px 0; }
+  .code-box .key { color: #9cdcfe; }
+  .code-box .string { color: #ce9178; }
+  
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #fff; padding: 12px 24px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; display: flex; align-items: center; gap: 8px; font-weight: 500; }
+  .toast.success { border-left: 4px solid var(--fb-green); }
+  .toast.error { border-left: 4px solid var(--danger); }
+  
+  @media (max-width: 640px) {
+    .container { padding: 12px; }
+    .card { padding: 16px; }
+    .btn { padding: 10px 16px; font-size: 13px; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="env,react">
+const { useState, useEffect } = React;
+
+// ========== TOAST HOOK ==========
+function useToast() {
+  const [toast, setToast] = useState(null);
+  const show = (message, type = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3000);
+  };
+  const node = toast ? (
+    <div className={`toast ${toast.type}`}>
+      {toast.type === 'success' ? '✅' : '❌'} {toast.message}
+    </div>
+  ) : null;
+  return [show, node];
+}
+
+// ========== MAIN APP ==========
+function App() {
+  const [showToast, toastNode] = useToast();
+  const [config, setConfig] = useState({
+    apiKey: '',
+    authDomain: '',
+    databaseURL: '',
+    projectId: '',
+    storageBucket: '',
+    messagingSenderId: '',
+    appId: ''
+  });
+  const [jsonInput, setJsonInput] = useState('');
+  const [testStatus, setTestStatus] = useState(null); // null, 'testing', 'success', 'error'
+  const [hasExistingConfig, setHasExistingConfig] = useState(false);
+  
+  // Load existing config on mount
+  useEffect(() => {
+    try {
+      const savedConfig = localStorage.getItem('gibikey_firebase_config');
+      if (savedConfig) {
+        const parsed = JSON.parse(savedConfig);
+        setConfig(parsed);
+        setJsonInput(JSON.stringify(parsed, null, 2));
+        setHasExistingConfig(true);
+      }
+    } catch (e) {
+      console.error('Failed to load config:', e);
+    }
+  }, []);
+  
+  const handleInputChange = (field, value) => {
+    setConfig(prev => ({ ...prev, [field]: value }));
+  };
+  
+  const handleJsonInput = (value) => {
+    setJsonInput(value);
+    try {
+      const parsed = JSON.parse(value);
+      setConfig(parsed);
+    } catch (e) {
+      // Invalid JSON, ignore
+    }
+  };
+  
+  const handleSave = () => {
+    if (!config.apiKey || !config.databaseURL || !config.projectId) {
+      showToast('Lengkapi minimal: API Key, Database URL, dan Project ID', 'error');
+      return;
+    }
+    
+    try {
+      localStorage.setItem('gibikey_firebase_config', JSON.stringify(config));
+      setHasExistingConfig(true);
+      showToast('Config berhasil disimpan!');
+    } catch (e) {
+      showToast('Gagal menyimpan config: ' + e.message, 'error');
+    }
+  };
+  
+  const handleTest = async () => {
+    setTestStatus('testing');
+    
+    try {
+      // Dynamically load Firebase
+      if (!window.firebase) {
+        await new Promise((resolve, reject) => {
+          const script1 = document.createElement('script');
+          script1.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js';
+          script1.onload = () => {
+            const script2 = document.createElement('script');
+            script2.src = 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js';
+            script2.onload = resolve;
+            script2.onerror = reject;
+            document.head.appendChild(script2);
+          };
+          script1.onerror = reject;
+          document.head.appendChild(script1);
+        });
+      }
+      
+      // Initialize Firebase
+      if (window.firebase && !window.firebase.apps.length) {
+        window.firebase.initializeApp(config);
+      }
+      
+      // Test database connection
+      const db = window.firebase.database();
+      const testRef = db.ref('.info/connected');
+      
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Connection timeout')), 10000);
+        testRef.on('value', (snap) => {
+          clearTimeout(timeout);
+          if (snap.val() === true) {
+            resolve();
+          }
+        }, reject);
+      });
+      
+      setTestStatus('success');
+      showToast('✅ Koneksi Firebase berhasil!');
+    } catch (e) {
+      setTestStatus('error');
+      showToast('❌ Koneksi gagal: ' + e.message, 'error');
+    }
+  };
+  
+  const handleClear = () => {
+    if (confirm('Hapus konfigurasi Firebase? Anda perlu menginput ulang config untuk menggunakan cloud sync.')) {
+      localStorage.removeItem('gibikey_firebase_config');
+      setConfig({
+        apiKey: '',
+        authDomain: '',
+        databaseURL: '',
+        projectId: '',
+        storageBucket: '',
+        messagingSenderId: '',
+        appId: ''
+      });
+      setJsonInput('');
+      setHasExistingConfig(false);
+      setTestStatus(null);
+      showToast('Config dihapus');
+    }
+  };
+  
+  const handleCopyConfig = () => {
+    navigator.clipboard.writeText(JSON.stringify(config, null, 2));
+    showToast('Config disalin ke clipboard!');
+  };
+
+  return (
+    <div className="container">
+      {/* Header */}
+      <div className="card">
+        <div className="card-header">
+          <span className="icon">⚙️</span>
+          <div>
+            <h1>Gibikey Firebase Config</h1>
+            <span className="version">Setup Cloud Storage</span>
+          </div>
+        </div>
+        
+        {hasExistingConfig && (
+          <div className="status-box success">
+            ✅ Config sudah tersimpan. Anda bisa langsung menggunakan <strong>gibikey_rich-v2.4.html</strong>
+          </div>
+        )}
+      </div>
+      
+      {/* Tutorial */}
+      <div className="card">
+        <h3 style={{ margin: '0 0 16px 0', fontSize: 16 }}>📚 Cara Mendapatkan Firebase Config</h3>
+        
+        <div className="step">
+          <div className="step-number">1</div>
+          <div className="step-content">
+            <h4>Buka Firebase Console</h4>
+            <p>Kunjungi <a href="https://console.firebase.google.com" target="_blank" style={{ color: 'var(--fb-blue)' }}>console.firebase.google.com</a> dan login dengan akun Google</p>
+          </div>
+        </div>
+        
+        <div className="step">
+          <div className="step-number">2</div>
+          <div className="step-content">
+            <h4>Buat Project Baru</h4>
+            <p>Klik "Add project" → Isi nama project → Ikuti langkah-langkahnya</p>
+          </div>
+        </div>
+        
+        <div className="step">
+          <div className="step-number">3</div>
+          <div className="step-content">
+            <h4>Tambah Web App</h4>
+            <p>Project settings ⚙️ → General → Scroll ke "Your apps" → Klik icon web "&lt;/&gt;" → Daftarkan app</p>
+          </div>
+        </div>
+        
+        <div className="step">
+          <div className="step-number">4</div>
+          <div className="step-content">
+            <h4>Copy Config</h4>
+            <p>Copy object config yang muncul, lalu paste di bawah ini</p>
+          </div>
+        </div>
+        
+        <div className="step">
+          <div className="step-number">5</div>
+          <div className="step-content">
+            <h4>Setup Realtime Database</h4>
+            <p>Build → Realtime Database → Create Database → Start in <strong>test mode</strong></p>
+          </div>
+        </div>
+        
+        <div className="code-box">
+          <div style={{ color: '#6a9955' }}>// Contoh config yang perlu di-copy:</div>
+          <div>{'{'}</div>
+          <div>  <span className="key">"apiKey"</span>: <span className="string">"AIzaSy..."</span>,</div>
+          <div>  <span className="key">"authDomain"</span>: <span className="string">"project-anda.firebaseapp.com"</span>,</div>
+          <div>  <span className="key">"databaseURL"</span>: <span className="string">"https://project-anda-default-rtdb.firebaseio.com"</span>,</div>
+          <div>  <span className="key">"projectId"</span>: <span className="string">"project-anda"</span>,</div>
+          <div>  <span className="key">"storageBucket"</span>: <span className="string">"project-anda.appspot.com"</span>,</div>
+          <div>  <span className="key">"messagingSenderId"</span>: <span className="string">"123456789"</span>,</div>
+          <div>  <span className="key">"appId"</span>: <span className="string">"1:123456789:web:abc123"</span></div>
+          <div>{'}'}</div>
+        </div>
+      </div>
+      
+      {/* Input Config */}
+      <div className="card">
+        <h3 style={{ margin: '0 0 16px 0', fontSize: 16 }}>🔧 Input Firebase Config</h3>
+        
+        {/* JSON Input (Quick Method) */}
+        <div className="form-group">
+          <label>⚡ Paste JSON Config (Cara Cepat)</label>
+          <textarea
+            placeholder='Paste config JSON dari Firebase Console...'
+            value={jsonInput}
+            onChange={(e) => handleJsonInput(e.target.value)}
+          />
+          <div className="hint">Paste seluruh object config dari Firebase Console</div>
+        </div>
+        
+        <div style={{ textAlign: 'center', margin: '16px 0', color: 'var(--fb-gray)', fontSize: 13 }}>
+          ─────────── atau isi manual ───────────
+        </div>
+        
+        {/* Manual Input */}
+        <div className="form-group">
+          <label>API Key *</label>
+          <input
+            type="text"
+            placeholder="AIzaSy..."
+            value={config.apiKey}
+            onChange={(e) => handleInputChange('apiKey', e.target.value)}
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Auth Domain</label>
+          <input
+            type="text"
+            placeholder="project-anda.firebaseapp.com"
+            value={config.authDomain}
+            onChange={(e) => handleInputChange('authDomain', e.target.value)}
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Database URL *</label>
+          <input
+            type="text"
+            placeholder="https://project-anda-default-rtdb.firebaseio.com"
+            value={config.databaseURL}
+            onChange={(e) => handleInputChange('databaseURL', e.target.value)}
+          />
+          <div className="hint">PENTING: Ini untuk Realtime Database</div>
+        </div>
+        
+        <div className="form-group">
+          <label>Project ID *</label>
+          <input
+            type="text"
+            placeholder="project-anda"
+            value={config.projectId}
+            onChange={(e) => handleInputChange('projectId', e.target.value)}
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Storage Bucket</label>
+          <input
+            type="text"
+            placeholder="project-anda.appspot.com"
+            value={config.storageBucket}
+            onChange={(e) => handleInputChange('storageBucket', e.target.value)}
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>Messaging Sender ID</label>
+          <input
+            type="text"
+            placeholder="123456789"
+            value={config.messagingSenderId}
+            onChange={(e) => handleInputChange('messagingSenderId', e.target.value)}
+          />
+        </div>
+        
+        <div className="form-group">
+          <label>App ID</label>
+          <input
+            type="text"
+            placeholder="1:123456789:web:abc123"
+            value={config.appId}
+            onChange={(e) => handleInputChange('appId', e.target.value)}
+          />
+        </div>
+        
+        {/* Status */}
+        {testStatus === 'testing' && (
+          <div className="status-box info">
+            ⏳ Menghubungkan ke Firebase...
+          </div>
+        )}
+        {testStatus === 'success' && (
+          <div className="status-box success">
+            ✅ Koneksi berhasil! Firebase siap digunakan.
+          </div>
+        )}
+        {testStatus === 'error' && (
+          <div className="status-box error">
+            ❌ Koneksi gagal. Periksa kembali config Anda.
+          </div>
+        )}
+        
+        {/* Buttons */}
+        <div className="btn-group" style={{ marginTop: 20 }}>
+          <button className="btn btn-primary" onClick={handleSave}>
+            💾 Simpan Config
+          </button>
+          <button className="btn btn-success" onClick={handleTest} disabled={!config.apiKey || !config.databaseURL}>
+            🔗 Test Koneksi
+          </button>
+          {hasExistingConfig && (
+            <>
+              <button className="btn btn-secondary" onClick={handleCopyConfig}>
+                📋 Copy Config
+              </button>
+              <button className="btn btn-danger" onClick={handleClear}>
+                🗑 Hapus
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+      
+      {/* Info */}
+      <div className="card">
+        <h3 style={{ margin: '0 0 12px 0', fontSize: 16 }}>ℹ️ Informasi</h3>
+        <div className="status-box warning">
+          <strong>Setelah menyimpan config:</strong>
+          <ol style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
+            <li>Buka file <strong>gibikey_rich-v2.4.html</strong></li>
+            <li>Data akan otomatis tersimpan di Firebase Cloud</li>
+            <li>Buka di HP/laptop manapun → data tetap sama</li>
+            <li>Cache dihapus? <strong>TIDAK MASALAH!</strong> Data aman di cloud</li>
+          </ol>
+        </div>
+      </div>
+      
+      {toastNode}
+    </div>
+  );
+}
+
+// ========== RENDER ==========
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
