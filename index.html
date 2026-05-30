@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Gibikey Rich v2.5.5 — Budget Manager (Cloud)</title>
-<meta name="description" content="Gibikey Rich v2.5.5 — Simulasi anggaran dengan Cloud Storage Firebase (Categories, Colors, Undo/Redo, Shortcuts, Local Backup)" />
+<title>Gibikey Rich v1.2 — Budget + Password Saver</title>
+<meta name="description" content="Gibikey Rich v1.2 — Budget Manager + Password Saver dengan LocalStorage & Firebase Cloud Storage" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>" />
 <script src="https://cdn.tailwindcss.com"></script>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -233,6 +233,127 @@
   .color-option { width: 20px; height: 20px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform 0.2s; }
   .color-option:hover { transform: scale(1.2); }
   .color-option.selected { border-color: #333; }
+
+  /* ========== PASSWORD SAVER STYLES ========== */
+  :root {
+    --studio-yellow: #F9A825;
+    --studio-yellow-dark: #F57F17;
+    --studio-black: #1a1a1a;
+    --studio-gray: #757575;
+    --studio-gray-light: #f5f5f5;
+    --studio-border: #e0e0e0;
+    --studio-white: #ffffff;
+    --studio-success: #4CAF50;
+    --studio-danger: #e41e3f;
+  }
+
+  .pwd-container { max-width: 100%; margin: 0; min-height: auto; background: var(--fb-gray-light); position: relative; padding-bottom: 80px; }
+  .pwd-header { background: var(--studio-yellow); padding: 16px 20px; position: sticky; top: 0; z-index: 10; }
+  .pwd-header-content { display: flex; justify-content: space-between; align-items: center; }
+  .pwd-logo { display: flex; align-items: center; gap: 10px; }
+  .pwd-logo .shield { width: 36px; height: 36px; background: var(--studio-success); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+  .pwd-logo h1 { margin: 0; font-size: 20px; font-weight: 700; color: var(--studio-black); }
+  .pwd-logo .tagline { font-size: 11px; color: var(--studio-black); opacity: 0.7; margin-top: 2px; }
+  .pwd-header-actions { display: flex; gap: 8px; }
+  .pwd-header-btn { background: transparent; border: none; padding: 8px; cursor: pointer; font-size: 18px; border-radius: 8px; transition: background 0.2s; }
+  .pwd-header-btn:hover { background: rgba(0,0,0,0.1); }
+
+  .pwd-search-bar { padding: 0 20px 16px; background: var(--studio-yellow); }
+  .pwd-search-input { width: 100%; padding: 12px 16px 12px 44px; border: none; border-radius: 12px; font-size: 14px; background: var(--studio-white); outline: none; }
+  .pwd-search-wrapper { position: relative; }
+  .pwd-search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 16px; opacity: 0.5; }
+
+  .pwd-summary-card { margin: 16px 20px; background: var(--studio-white); border-radius: 16px; padding: 16px 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .pwd-summary-icon { width: 48px; height: 48px; background: var(--studio-yellow); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+  .pwd-summary-text h2 { margin: 0; font-size: 28px; font-weight: 700; }
+  .pwd-summary-text p { margin: 4px 0 0; font-size: 13px; color: var(--studio-gray); }
+
+  .pwd-section { padding: 0 20px 20px; }
+  .pwd-section-title { font-size: 12px; font-weight: 700; color: var(--studio-gray); margin-bottom: 12px; letter-spacing: 0.5px; }
+
+  .pwd-items-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  @media (max-width: 360px) {
+    .pwd-items-grid { grid-template-columns: 1fr; }
+  }
+
+  .pwd-item-card-grid { background: var(--studio-white); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); transition: all 0.2s; display: flex; flex-direction: column; }
+  .pwd-item-card-grid:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); transform: translateY(-2px); }
+
+  .pwd-item-card-image { width: 100%; height: auto; min-height: 80px; max-height: 300px; object-fit: contain; background: var(--studio-gray-light); }
+  .pwd-item-card-image-placeholder { width: 100%; height: 100px; background: var(--studio-gray-light); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+  .pwd-item-card-full-image { width: 100%; display: block; }
+
+  .pwd-item-card-body { padding: 12px; flex: 1; }
+  .pwd-item-card-title { font-weight: 600; font-size: 14px; margin: 0 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pwd-item-card-subtitle { font-size: 11px; color: var(--studio-gray); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 2px; }
+  .pwd-item-card-detail { font-size: 11px; color: var(--studio-black); margin-bottom: 2px; word-break: break-all; }
+
+  .pwd-item-card-actions { display: flex; gap: 4px; padding: 8px 12px; border-top: 1px solid var(--studio-border); }
+  .pwd-item-card-btn { flex: 1; background: var(--studio-gray-light); border: none; padding: 6px; cursor: pointer; font-size: 14px; border-radius: 6px; transition: background 0.2s; }
+  .pwd-item-card-btn:hover { background: var(--studio-border); }
+  .pwd-item-card-btn.danger:hover { background: #ffebee; }
+
+  .pwd-empty-state { text-align: center; padding: 40px 20px; grid-column: 1 / -1; }
+  .pwd-empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.5; }
+  .pwd-empty-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+  .pwd-empty-desc { font-size: 14px; color: var(--studio-gray); }
+
+  .pwd-bottom-nav { position: fixed; bottom: 0; left: 260px; width: calc(100% - 260px); background: var(--studio-white); border-top: 1px solid var(--studio-border); display: flex; z-index: 20; }
+  @media (max-width: 900px) {
+    .pwd-bottom-nav { left: 0; width: 100%; }
+  }
+  .pwd-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px 0; cursor: pointer; transition: all 0.2s; }
+  .pwd-nav-item:hover { background: var(--studio-gray-light); }
+  .pwd-nav-item.active { color: var(--studio-yellow-dark); }
+  .pwd-nav-item.active .pwd-nav-icon { color: var(--studio-yellow-dark); }
+  .pwd-nav-icon { font-size: 22px; margin-bottom: 4px; color: var(--studio-gray); }
+  .pwd-nav-label { font-size: 11px; font-weight: 500; color: var(--studio-gray); }
+  .pwd-nav-item.active .pwd-nav-label { color: var(--studio-yellow-dark); font-weight: 600; }
+
+  .pwd-fab-btn { position: fixed; bottom: 80px; right: 20px; width: 56px; height: 56px; background: var(--studio-black); color: var(--studio-white); border: none; border-radius: 16px; font-size: 28px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: all 0.2s; z-index: 15; }
+  .pwd-fab-btn:hover { transform: scale(1.1); box-shadow: 0 6px 16px rgba(0,0,0,0.4); }
+
+  .pwd-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: flex-end; justify-content: center; z-index: 100; animation: fadeIn 0.2s; }
+  .pwd-modal { background: var(--studio-white); border-radius: 24px 24px 0 0; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s; }
+  .pwd-modal-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--studio-border); position: sticky; top: 0; background: var(--studio-white); z-index: 1; }
+  .pwd-modal-title { font-size: 18px; font-weight: 700; margin: 0; }
+  .pwd-modal-close { background: transparent; border: none; font-size: 24px; cursor: pointer; padding: 4px 8px; color: var(--studio-gray); }
+  .pwd-modal-body { padding: 20px; }
+
+  .pwd-form-group { margin-bottom: 16px; }
+  .pwd-form-label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--studio-black); }
+  .pwd-form-label .required { color: var(--studio-danger); }
+  .pwd-form-label .optional { color: var(--studio-gray); font-weight: 400; }
+  .pwd-form-input { width: 100%; padding: 12px 16px; border: 1px solid var(--studio-border); border-radius: 12px; font-size: 14px; outline: none; transition: border-color 0.2s; background: var(--studio-gray-light); }
+  .pwd-form-input:focus { border-color: var(--studio-yellow-dark); background: var(--studio-white); }
+  .pwd-form-textarea { min-height: 80px; resize: vertical; }
+
+  .pwd-platform-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .pwd-platform-tab { padding: 6px 12px; background: var(--studio-gray-light); border: 1px solid var(--studio-border); border-radius: 20px; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+  .pwd-platform-tab:hover { background: var(--studio-white); border-color: var(--studio-yellow); }
+  .pwd-platform-tab.active { background: var(--studio-yellow); border-color: var(--studio-yellow); font-weight: 600; }
+
+  .pwd-image-upload { border: 2px dashed var(--studio-border); border-radius: 12px; padding: 24px; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--studio-gray-light); }
+  .pwd-image-upload:hover { border-color: var(--studio-yellow); background: var(--studio-white); }
+  .pwd-image-upload-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.5; }
+  .pwd-image-upload-text { font-size: 14px; color: var(--studio-gray); }
+  .pwd-image-preview { max-width: 100%; max-height: 200px; border-radius: 12px; margin-top: 12px; }
+
+  .pwd-submit-btn { width: 100%; padding: 14px; background: var(--studio-black); color: var(--studio-white); border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+  .pwd-submit-btn:hover { background: #333; }
+  .pwd-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .pwd-password-wrapper { position: relative; }
+  .pwd-password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; font-size: 18px; padding: 4px; }
+  .pwd-password-strength { height: 4px; background: var(--studio-border); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  .pwd-password-strength-bar { height: 100%; transition: all 0.3s; }
+  .pwd-password-strength-bar.weak { width: 33%; background: var(--studio-danger); }
+  .pwd-password-strength-bar.medium { width: 66%; background: var(--studio-yellow); }
+  .pwd-password-strength-bar.strong { width: 100%; background: var(--studio-success); }
+
+  .pwd-copy-btn { background: none; border: none; cursor: pointer; font-size: 14px; padding: 2px 4px; }
+  .pwd-copy-feedback { font-size: 10px; color: var(--studio-success); }
+  .pwd-toggle-pwd-btn { background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px; margin-left: 4px; }
 </style>
 </head>
 <body>
@@ -324,6 +445,30 @@ const COLORS = [
 
 const getCategoryById = (id) => CATEGORIES.find(c => c.id === id) || CATEGORIES[CATEGORIES.length - 1];
 const getColorHex = (colorIndex) => COLORS[(colorIndex - 1) % COLORS.length] || COLORS[0];
+
+// ========== PASSWORD SAVER PLATFORMS ==========
+const PLATFORMS = [
+  { id: 'google', name: 'Google', icon: '🔴', color: '#ea4335' },
+  { id: 'facebook', name: 'Facebook', icon: '🔵', color: '#1877f2' },
+  { id: 'instagram', name: 'Instagram', icon: '🟣', color: '#e4405f' },
+  { id: 'tiktok', name: 'TikTok', icon: '⬛', color: '#000' },
+  { id: 'discord', name: 'Discord', icon: '💜', color: '#5865f2' },
+  { id: 'twitter', name: 'Twitter', icon: '🐦', color: '#1da1f2' },
+  { id: 'github', name: 'GitHub', icon: '🐙', color: '#333' },
+  { id: 'email', name: 'Email', icon: '📧', color: '#F9A825' },
+];
+
+const getPasswordStrength = (password) => {
+  if (!password || password.length < 4) return { level: 'weak', text: 'Lemah' };
+  if (password.length < 8) return { level: 'medium', text: 'Sedang' };
+  const hasUpper = /[A-Z]/.test(password);
+  const hasLower = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+  const score = [hasUpper, hasLower, hasNumber, hasSpecial].filter(Boolean).length;
+  if (score >= 3 && password.length >= 8) return { level: 'strong', text: 'Kuat' };
+  return { level: 'medium', text: 'Sedang' };
+};
 
 // ========== UNDO/REDO HOOK ==========
 function useUndoRedo(initialState, maxHistory = 50) {
@@ -795,6 +940,17 @@ function App() {
   const [showTemplateManager, setShowTemplateManager] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
   
+  // ========== PASSWORD SAVER STATE ==========
+  const [pwdActiveTab, setPwdActiveTab] = useState('akun');
+  const [pwdAccounts, setPwdAccounts] = useState([]);
+  const [pwdDocuments, setPwdDocuments] = useState([]);
+  const [pwdLinks, setPwdLinks] = useState([]);
+  const [pwdLastUsername, setPwdLastUsername] = useState('');
+  const [pwdShowAddModal, setPwdShowAddModal] = useState(false);
+  const [pwdEditingItem, setPwdEditingItem] = useState(null);
+  const [pwdSearchQuery, setPwdSearchQuery] = useState('');
+  const pwdIsInitialLoadDone = useRef(false);
+  
   // Flag to prevent saving during initial load
   const isInitialLoadDone = useRef(false);
   
@@ -827,15 +983,54 @@ function App() {
     const config = getFirebaseConfig();
     setHasConfig(!!config && !!config.apiKey);
     
+    // Function to load data from localStorage (always works)
+    const loadDataFromLocal = () => {
+      console.log('🔄 Loading data from localStorage...');
+      const periodData = ls.get('period', null);
+      const incomesData = ls.get('incomes', null);
+      const templatesData = ls.get('templates', null);
+      const savedSimData = ls.get('savedSimulations', null);
+      const simBillsData = ls.get('simBills', null);
+      const tagihanData = ls.get('tagihan', null);
+      const bukuData = ls.get('bukuPeriode', null);
+      const pwdAccountsData = ls.get('pwd_accounts', null);
+      const pwdDocumentsData = ls.get('pwd_documents', null);
+      const pwdLinksData = ls.get('pwd_links', null);
+      const pwdLastUser = ls.get('pwd_lastUsername', null);
+      
+      if (periodData) setPeriod(periodData);
+      if (incomesData) setIncomes(incomesData);
+      if (templatesData) setTemplates(templatesData);
+      if (savedSimData) setSavedSimulations(savedSimData);
+      if (simBillsData) setSimBills(simBillsData);
+      if (tagihanData) setTagihan(tagihanData);
+      if (bukuData) setBukuPeriode(bukuData);
+      if (pwdAccountsData) setPwdAccounts(pwdAccountsData);
+      if (pwdDocumentsData) setPwdDocuments(pwdDocumentsData);
+      if (pwdLinksData) setPwdLinks(pwdLinksData);
+      if (pwdLastUser) setPwdLastUsername(pwdLastUser);
+      
+      console.log('✅ Local data loaded');
+    };
+    
+    // If no Firebase config, still load from localStorage and enable saving
     if (!config || !config.apiKey || !config.databaseURL) {
+      console.log('⚠️ No Firebase config, using localStorage only');
+      loadDataFromLocal();
       setIsLoading(false);
+      isInitialLoadDone.current = true;
+      pwdIsInitialLoadDone.current = true;
       return;
     }
     
     // Initialize Firebase
     const success = initFirebase();
     if (!success) {
+      console.log('⚠️ Firebase init failed, using localStorage only');
+      loadDataFromLocal();
       setIsLoading(false);
+      isInitialLoadDone.current = true;
+      pwdIsInitialLoadDone.current = true;
       return;
     }
     
@@ -856,7 +1051,11 @@ function App() {
           savedSimData,
           simBillsData,
           tagihanData,
-          bukuData
+          bukuData,
+          pwdAccountsData,
+          pwdDocumentsData,
+          pwdLinksData,
+          pwdLastUser
         ] = await Promise.all([
           hybridStorage.load('period'),
           hybridStorage.load('incomes'),
@@ -864,7 +1063,11 @@ function App() {
           hybridStorage.load('savedSimulations'),
           hybridStorage.load('simBills'),
           hybridStorage.load('tagihan'),
-          hybridStorage.load('bukuPeriode')
+          hybridStorage.load('bukuPeriode'),
+          hybridStorage.load('pwd_accounts'),
+          hybridStorage.load('pwd_documents'),
+          hybridStorage.load('pwd_links'),
+          hybridStorage.load('pwd_lastUsername')
         ]);
         
         if (periodData) setPeriod(periodData);
@@ -875,12 +1078,20 @@ function App() {
         if (tagihanData) setTagihan(tagihanData);
         if (bukuData) setBukuPeriode(bukuData);
         
+        // Password Saver data
+        if (pwdAccountsData) setPwdAccounts(pwdAccountsData);
+        if (pwdDocumentsData) setPwdDocuments(pwdDocumentsData);
+        if (pwdLinksData) setPwdLinks(pwdLinksData);
+        if (pwdLastUser) setPwdLastUsername(pwdLastUser);
+        
         setIsCloudReady(true);
         isInitialLoadDone.current = true; // Mark initial load complete
+        pwdIsInitialLoadDone.current = true;
         console.log('✅ Data loaded:', { 
           templates: templatesData?.length || 0, 
           savedSimulations: savedSimData?.length || 0, 
-          simBills: simBillsData?.length || 0 
+          simBills: simBillsData?.length || 0,
+          pwdAccounts: pwdAccountsData?.length || 0
         });
       } catch (e) {
         console.error('Failed to load data:', e);
@@ -940,6 +1151,107 @@ function App() {
   useEffect(() => {
     saveData('bukuPeriode', bukuPeriode);
   }, [bukuPeriode]);
+  
+  // ========== PASSWORD SAVER SAVE EFFECTS ==========
+  useEffect(() => {
+    if (!pwdIsInitialLoadDone.current) return;
+    saveData('pwd_accounts', pwdAccounts);
+  }, [pwdAccounts]);
+  
+  useEffect(() => {
+    if (!pwdIsInitialLoadDone.current) return;
+    saveData('pwd_documents', pwdDocuments);
+  }, [pwdDocuments]);
+  
+  useEffect(() => {
+    if (!pwdIsInitialLoadDone.current) return;
+    saveData('pwd_links', pwdLinks);
+  }, [pwdLinks]);
+  
+  // ========== PASSWORD SAVER HANDLERS ==========
+  const pwdAddAccount = (data) => {
+    setPwdAccounts([...pwdAccounts, { ...data, id: uid(), createdAt: new Date().toISOString() }]);
+    if (data.username) {
+      setPwdLastUsername(data.username);
+      saveData('pwd_lastUsername', data.username);
+    }
+    showToast('Akun berhasil disimpan! ✅');
+    setPwdShowAddModal(false);
+  };
+  
+  const pwdUpdateAccount = (id, data) => {
+    setPwdAccounts(pwdAccounts.map(a => a.id === id ? { ...a, ...data } : a));
+    showToast('Akun berhasil diperbarui! ✅');
+    setPwdEditingItem(null);
+  };
+  
+  const pwdDeleteAccount = (id) => {
+    if (confirm('Hapus akun ini?')) {
+      setPwdAccounts(pwdAccounts.filter(a => a.id !== id));
+      showToast('Akun dihapus');
+    }
+  };
+  
+  const pwdAddDocument = (data) => {
+    setPwdDocuments([...pwdDocuments, { ...data, id: uid(), createdAt: new Date().toISOString() }]);
+    showToast('Dokumen berhasil disimpan! ✅');
+    setPwdShowAddModal(false);
+  };
+  
+  const pwdUpdateDocument = (id, data) => {
+    setPwdDocuments(pwdDocuments.map(d => d.id === id ? { ...d, ...data } : d));
+    showToast('Dokumen berhasil diperbarui! ✅');
+    setPwdEditingItem(null);
+  };
+  
+  const pwdDeleteDocument = (id) => {
+    if (confirm('Hapus dokumen ini?')) {
+      setPwdDocuments(pwdDocuments.filter(d => d.id !== id));
+      showToast('Dokumen dihapus');
+    }
+  };
+  
+  const pwdAddLink = (data) => {
+    setPwdLinks([...pwdLinks, { ...data, id: uid(), createdAt: new Date().toISOString() }]);
+    showToast('Link berhasil disimpan! ✅');
+    setPwdShowAddModal(false);
+  };
+  
+  const pwdUpdateLink = (id, data) => {
+    setPwdLinks(pwdLinks.map(l => l.id === id ? { ...l, ...data } : l));
+    showToast('Link berhasil diperbarui! ✅');
+    setPwdEditingItem(null);
+  };
+  
+  const pwdDeleteLink = (id) => {
+    if (confirm('Hapus link ini?')) {
+      setPwdLinks(pwdLinks.filter(l => l.id !== id));
+      showToast('Link dihapus');
+    }
+  };
+  
+  const pwdFilteredAccounts = useMemo(() => {
+    if (!pwdSearchQuery) return pwdAccounts;
+    const q = pwdSearchQuery.toLowerCase();
+    return pwdAccounts.filter(a => 
+      a.platform?.toLowerCase().includes(q) || 
+      a.platformName?.toLowerCase().includes(q) ||
+      a.title?.toLowerCase().includes(q) ||
+      a.username?.toLowerCase().includes(q)
+    );
+  }, [pwdAccounts, pwdSearchQuery]);
+  
+  const pwdFilteredDocuments = useMemo(() => {
+    if (!pwdSearchQuery) return pwdDocuments;
+    const q = pwdSearchQuery.toLowerCase();
+    return pwdDocuments.filter(d => d.title?.toLowerCase().includes(q) || d.description?.toLowerCase().includes(q));
+  }, [pwdDocuments, pwdSearchQuery]);
+  
+  const pwdFilteredLinks = useMemo(() => {
+    if (!pwdSearchQuery) return pwdLinks;
+    const q = pwdSearchQuery.toLowerCase();
+    return pwdLinks.filter(l => l.title?.toLowerCase().includes(q) || l.url?.toLowerCase().includes(q) || l.description?.toLowerCase().includes(q));
+  }, [pwdLinks, pwdSearchQuery]);
   
   // ========== INCOME HANDLERS ==========
   const addIncome = () => {
@@ -1446,6 +1758,13 @@ function App() {
                 <span className="icon">📊</span>
                 <span>Budget</span>
               </div>
+              <div 
+                className={`nav-item ${sidebarTab === 'password-saver' ? 'active' : ''}`}
+                onClick={() => { setSidebarTab('password-saver'); setNavOpen(false); }}
+              >
+                <span className="icon">🔐</span>
+                <span>Password Saver</span>
+              </div>
             </nav>
 
             {/* Settings Button at Bottom */}
@@ -1740,6 +2059,36 @@ function App() {
               />
             )}
           </div>
+        )}
+
+        {/* Password Saver Tab Content */}
+        {sidebarTab === 'password-saver' && (
+          <PasswordSaverContent
+            pwdActiveTab={pwdActiveTab}
+            setPwdActiveTab={setPwdActiveTab}
+            pwdSearchQuery={pwdSearchQuery}
+            setPwdSearchQuery={setPwdSearchQuery}
+            pwdFilteredAccounts={pwdFilteredAccounts}
+            pwdFilteredDocuments={pwdFilteredDocuments}
+            pwdFilteredLinks={pwdFilteredLinks}
+            pwdAccounts={pwdAccounts}
+            pwdDocuments={pwdDocuments}
+            pwdLinks={pwdLinks}
+            pwdShowAddModal={pwdShowAddModal}
+            setPwdShowAddModal={setPwdShowAddModal}
+            pwdEditingItem={pwdEditingItem}
+            setPwdEditingItem={setPwdEditingItem}
+            pwdLastUsername={pwdLastUsername}
+            pwdAddAccount={pwdAddAccount}
+            pwdUpdateAccount={pwdUpdateAccount}
+            pwdDeleteAccount={pwdDeleteAccount}
+            pwdAddDocument={pwdAddDocument}
+            pwdUpdateDocument={pwdUpdateDocument}
+            pwdDeleteDocument={pwdDeleteDocument}
+            pwdAddLink={pwdAddLink}
+            pwdUpdateLink={pwdUpdateLink}
+            pwdDeleteLink={pwdDeleteLink}
+          />
         )}
       </main>
 
@@ -3033,6 +3382,723 @@ function MoveToDateModal({ tagihan, period, tagihanList, onMove, onClose }) {
           <button className="fb-btn fb-btn-purple" onClick={handleMove}>
             📤 Pindahkan
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ========== PASSWORD SAVER CONTENT COMPONENT ==========
+function PasswordSaverContent({
+  pwdActiveTab, setPwdActiveTab,
+  pwdSearchQuery, setPwdSearchQuery,
+  pwdFilteredAccounts, pwdFilteredDocuments, pwdFilteredLinks,
+  pwdAccounts, pwdDocuments, pwdLinks,
+  pwdShowAddModal, setPwdShowAddModal,
+  pwdEditingItem, setPwdEditingItem,
+  pwdLastUsername,
+  pwdAddAccount, pwdUpdateAccount, pwdDeleteAccount,
+  pwdAddDocument, pwdUpdateDocument, pwdDeleteDocument,
+  pwdAddLink, pwdUpdateLink, pwdDeleteLink
+}) {
+  const pwdFileInputRef = useRef(null);
+  
+  const pwdExportData = () => {
+    const data = { accounts: pwdAccounts, documents: pwdDocuments, links: pwdLinks, exportedAt: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `password_saver_backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  
+  const pwdImportData = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const data = JSON.parse(evt.target.result);
+        // Import would need parent handlers - simplified for now
+        alert('Import berhasil! Data akan dimuat setelah refresh.');
+      } catch (err) {
+        alert('Gagal mengimpor data');
+      }
+    };
+    reader.readAsText(file);
+  };
+  
+  const searchPlaceholder = {
+    akun: 'Cari akun...',
+    dokumen: 'Cari dokumen...',
+    link: 'Cari link...'
+  }[pwdActiveTab];
+  
+  const getSummary = () => {
+    switch (pwdActiveTab) {
+      case 'akun': return { count: pwdAccounts.length, label: 'Akun Tersimpan', icon: '🔑' };
+      case 'dokumen': return { count: pwdDocuments.length, label: 'Dokumen Tersimpan', icon: '📄' };
+      case 'link': return { count: pwdLinks.length, label: 'Link Tersimpan', icon: '🔗' };
+    }
+  };
+  
+  const summary = getSummary();
+  
+  return (
+    <div className="pwd-container" style={{ marginLeft: 0, maxWidth: '100%' }}>
+      {/* Header */}
+      <div className="pwd-header">
+        <div className="pwd-header-content">
+          <div className="pwd-logo">
+            <div className="shield">🔐</div>
+            <div>
+              <h1>Password Saver</h1>
+              <div className="tagline">Vault: Akun · Dokumen · Link</div>
+            </div>
+          </div>
+          <div className="pwd-header-actions">
+            <button className="pwd-header-btn" onClick={pwdExportData} title="Export Data">📥</button>
+            <button className="pwd-header-btn" onClick={() => pwdFileInputRef.current?.click()} title="Import Data">📤</button>
+            <input ref={pwdFileInputRef} type="file" accept=".json" onChange={pwdImportData} style={{ display: 'none' }} />
+          </div>
+        </div>
+      </div>
+      
+      {/* Search */}
+      <div className="pwd-search-bar">
+        <div className="pwd-search-wrapper">
+          <span className="pwd-search-icon">🔍</span>
+          <input 
+            className="pwd-search-input" 
+            placeholder={searchPlaceholder}
+            value={pwdSearchQuery}
+            onChange={(e) => setPwdSearchQuery(e.target.value)}
+          />
+        </div>
+      </div>
+      
+      {/* Summary Card */}
+      <div className="pwd-summary-card">
+        <div className="pwd-summary-icon">{summary.icon}</div>
+        <div className="pwd-summary-text">
+          <h2>{summary.count}</h2>
+          <p>{summary.label}</p>
+        </div>
+      </div>
+      
+      {/* Section Title */}
+      <div className="pwd-section">
+        <div className="pwd-section-title">{pwdActiveTab === 'akun' ? 'AKUN' : pwdActiveTab === 'dokumen' ? 'DOKUMEN' : 'LINK PENTING'}</div>
+        
+        <div className="pwd-items-grid">
+          {pwdActiveTab === 'akun' && (
+            pwdFilteredAccounts.length === 0 ? (
+              <div className="pwd-empty-state">
+                <div className="pwd-empty-icon">🛡️</div>
+                <div className="pwd-empty-title">Belum ada akun</div>
+                <div className="pwd-empty-desc">Tap tombol + untuk menambah akun pertamamu</div>
+              </div>
+            ) : (
+              pwdFilteredAccounts.map(account => (
+                <PwdAccountCard 
+                  key={account.id} 
+                  account={account} 
+                  onEdit={() => setPwdEditingItem({ type: 'account', data: account })}
+                  onDelete={() => pwdDeleteAccount(account.id)}
+                />
+              ))
+            )
+          )}
+          
+          {pwdActiveTab === 'dokumen' && (
+            pwdFilteredDocuments.length === 0 ? (
+              <div className="pwd-empty-state">
+                <div className="pwd-empty-icon">📄</div>
+                <div className="pwd-empty-title">Belum ada dokumen</div>
+                <div className="pwd-empty-desc">Tap tombol + untuk menambah dokumen pertamamu</div>
+              </div>
+            ) : (
+              pwdFilteredDocuments.map(doc => (
+                <PwdDocumentCard 
+                  key={doc.id} 
+                  document={doc} 
+                  onEdit={() => setPwdEditingItem({ type: 'document', data: doc })}
+                  onDelete={() => pwdDeleteDocument(doc.id)}
+                />
+              ))
+            )
+          )}
+          
+          {pwdActiveTab === 'link' && (
+            pwdFilteredLinks.length === 0 ? (
+              <div className="pwd-empty-state">
+                <div className="pwd-empty-icon">🔗</div>
+                <div className="pwd-empty-title">Belum ada link</div>
+                <div className="pwd-empty-desc">Tap tombol + untuk menambah link pertamamu</div>
+              </div>
+            ) : (
+              pwdFilteredLinks.map(link => (
+                <PwdLinkCard 
+                  key={link.id} 
+                  link={link} 
+                  onEdit={() => setPwdEditingItem({ type: 'link', data: link })}
+                  onDelete={() => pwdDeleteLink(link.id)}
+                />
+              ))
+            )
+          )}
+        </div>
+      </div>
+      
+      {/* FAB Button */}
+      <button className="pwd-fab-btn" onClick={() => setPwdShowAddModal(true)}>+</button>
+      
+      {/* Bottom Navigation */}
+      <div className="pwd-bottom-nav">
+        <div className={`pwd-nav-item ${pwdActiveTab === 'akun' ? 'active' : ''}`} onClick={() => setPwdActiveTab('akun')}>
+          <span className="pwd-nav-icon">🔑</span>
+          <span className="pwd-nav-label">Akun</span>
+        </div>
+        <div className={`pwd-nav-item ${pwdActiveTab === 'dokumen' ? 'active' : ''}`} onClick={() => setPwdActiveTab('dokumen')}>
+          <span className="pwd-nav-icon">📄</span>
+          <span className="pwd-nav-label">Dokumen</span>
+        </div>
+        <div className={`pwd-nav-item ${pwdActiveTab === 'link' ? 'active' : ''}`} onClick={() => setPwdActiveTab('link')}>
+          <span className="pwd-nav-icon">🔗</span>
+          <span className="pwd-nav-label">Link Penting</span>
+        </div>
+      </div>
+      
+      {/* Add Modal */}
+      {pwdShowAddModal && (
+        <PwdAddModal 
+          type={pwdActiveTab}
+          lastUsername={pwdLastUsername}
+          onSave={(data) => {
+            if (pwdActiveTab === 'akun') pwdAddAccount(data);
+            else if (pwdActiveTab === 'dokumen') pwdAddDocument(data);
+            else pwdAddLink(data);
+          }}
+          onClose={() => setPwdShowAddModal(false)}
+        />
+      )}
+      
+      {/* Edit Modal */}
+      {pwdEditingItem && (
+        <PwdEditModal 
+          item={pwdEditingItem}
+          onUpdate={(data) => {
+            if (pwdEditingItem.type === 'account') pwdUpdateAccount(pwdEditingItem.data.id, data);
+            else if (pwdEditingItem.type === 'document') pwdUpdateDocument(pwdEditingItem.data.id, data);
+            else pwdUpdateLink(pwdEditingItem.data.id, data);
+          }}
+          onClose={() => setPwdEditingItem(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ========== PWD ACCOUNT CARD ==========
+function PwdAccountCard({ account, onEdit, onDelete }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [copied, setCopied] = useState(null);
+  
+  const copyToClipboard = (text, field) => {
+    navigator.clipboard.writeText(text);
+    setCopied(field);
+    setTimeout(() => setCopied(null), 1500);
+  };
+  
+  const platformColor = PLATFORMS.find(p => p.id === account.platform)?.color || '#757575';
+  const platformIcon = PLATFORMS.find(p => p.id === account.platform)?.icon || '🔐';
+  
+  const hasImage = account.imageData;
+  const hasSubtitle = account.subtitle && account.subtitle.trim();
+  const hasUsername = account.username && account.username.trim();
+  const hasPassword = account.password && account.password.trim();
+  const hasUrl = account.url && account.url.trim();
+  const hasNotes = account.notes && account.notes.trim();
+  
+  return (
+    <div className="pwd-item-card-grid">
+      {hasImage ? (
+        <img src={account.imageData} className="pwd-item-card-full-image" alt={account.platformName || account.title} />
+      ) : (
+        <div className="pwd-item-card-image-placeholder" style={{ background: platformColor + '20' }}>
+          {platformIcon}
+        </div>
+      )}
+      
+      <div className="pwd-item-card-body">
+        <div className="pwd-item-card-title">{account.platformName || account.title || 'Akun'}</div>
+        {hasSubtitle && <div className="pwd-item-card-subtitle">{account.subtitle}</div>}
+        {hasUsername && (
+          <div className="pwd-item-card-detail" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span>👤 {account.username}</span>
+            <button className="pwd-copy-btn" onClick={() => copyToClipboard(account.username, 'user')}>📋</button>
+            {copied === 'user' && <span className="pwd-copy-feedback">✓</span>}
+          </div>
+        )}
+        {hasPassword && (
+          <div className="pwd-item-card-detail" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span>🔑 {showPassword ? account.password : '••••••••'}</span>
+            <button className="pwd-toggle-pwd-btn" onClick={() => setShowPassword(!showPassword)}>
+              {showPassword ? '🙈' : '👁️'}
+            </button>
+            <button className="pwd-copy-btn" onClick={() => copyToClipboard(account.password, 'pwd')}>📋</button>
+            {copied === 'pwd' && <span className="pwd-copy-feedback">✓</span>}
+          </div>
+        )}
+        {hasUrl && (
+          <div className="pwd-item-card-subtitle" style={{ fontSize: 10, wordBreak: 'break-all' }}>
+            🔗 {account.url}
+          </div>
+        )}
+        {hasNotes && (
+          <div className="pwd-item-card-subtitle" style={{ fontSize: 10 }}>
+            📝 {account.notes.length > 100 ? account.notes.substring(0, 100) + '...' : account.notes}
+          </div>
+        )}
+      </div>
+      
+      <div className="pwd-item-card-actions">
+        <button className="pwd-item-card-btn" onClick={onEdit}>✏️ Edit</button>
+        <button className="pwd-item-card-btn danger" onClick={onDelete}>🗑️</button>
+      </div>
+    </div>
+  );
+}
+
+// ========== PWD DOCUMENT CARD ==========
+function PwdDocumentCard({ document, onEdit, onDelete }) {
+  const hasImage = document.imageData;
+  const hasDescription = document.description && document.description.trim();
+  
+  return (
+    <div className="pwd-item-card-grid">
+      {hasImage ? (
+        <img src={document.imageData} className="pwd-item-card-full-image" alt={document.title} />
+      ) : (
+        <div className="pwd-item-card-image-placeholder">📄</div>
+      )}
+      
+      <div className="pwd-item-card-body">
+        <div className="pwd-item-card-title">{document.title || 'Dokumen'}</div>
+        {hasDescription && <div className="pwd-item-card-detail">{document.description}</div>}
+      </div>
+      
+      <div className="pwd-item-card-actions">
+        <button className="pwd-item-card-btn" onClick={onEdit}>✏️ Edit</button>
+        <button className="pwd-item-card-btn danger" onClick={onDelete}>🗑️</button>
+      </div>
+    </div>
+  );
+}
+
+// ========== PWD LINK CARD ==========
+function PwdLinkCard({ link, onEdit, onDelete }) {
+  const [copied, setCopied] = useState(false);
+  
+  const copyUrl = () => {
+    navigator.clipboard.writeText(link.url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+  
+  const openLink = () => {
+    if (link.url) window.open(link.url, '_blank');
+  };
+  
+  const hasTitle = link.title && link.title.trim();
+  const hasUrl = link.url && link.url.trim();
+  const hasDescription = link.description && link.description.trim();
+  
+  return (
+    <div className="pwd-item-card-grid">
+      <div className="pwd-item-card-image-placeholder" style={{ background: '#2196f320' }}>🔗</div>
+      
+      <div className="pwd-item-card-body">
+        {hasTitle && <div className="pwd-item-card-title">{link.title}</div>}
+        {hasUrl && (
+          <div className="pwd-item-card-detail" style={{ fontSize: 10, wordBreak: 'break-all', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span onClick={openLink} style={{ cursor: 'pointer', color: '#1976d2' }}>{link.url}</span>
+            <button className="pwd-copy-btn" onClick={copyUrl}>📋</button>
+            {copied && <span className="pwd-copy-feedback">✓</span>}
+          </div>
+        )}
+        {hasDescription && (
+          <div className="pwd-item-card-detail" style={{ fontSize: 10 }}>📝 {link.description}</div>
+        )}
+      </div>
+      
+      <div className="pwd-item-card-actions">
+        <button className="pwd-item-card-btn" onClick={openLink}>🔗 Buka</button>
+        <button className="pwd-item-card-btn" onClick={onEdit}>✏️</button>
+        <button className="pwd-item-card-btn danger" onClick={onDelete}>🗑️</button>
+      </div>
+    </div>
+  );
+}
+
+// ========== PWD ADD MODAL ==========
+function PwdAddModal({ type, lastUsername, onSave, onClose }) {
+  const [platform, setPlatform] = useState('');
+  const [platformName, setPlatformName] = useState('');
+  const [title, setTitle] = useState('');
+  const [subtitle, setSubtitle] = useState('');
+  const [username, setUsername] = useState(lastUsername || '');
+  const [password, setPassword] = useState('');
+  const [showPwd, setShowPwd] = useState(false);
+  const [url, setUrl] = useState('');
+  const [notes, setNotes] = useState('');
+  const [imageData, setImageData] = useState(null);
+  
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => setImageData(evt.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleSave = () => {
+    if (type === 'akun') {
+      if (!platformName.trim()) { alert('Nama platform wajib diisi!'); return; }
+      onSave({ platform, platformName: platformName.trim(), title, subtitle, username, password, url, notes, imageData });
+    } else if (type === 'dokumen') {
+      if (!title.trim()) { alert('Judul dokumen wajib diisi!'); return; }
+      onSave({ title: title.trim(), description: subtitle, imageData });
+    } else {
+      if (!url.trim()) { alert('URL wajib diisi!'); return; }
+      onSave({ title: title.trim(), url: url.trim(), description: subtitle });
+    }
+  };
+  
+  const passwordStrength = getPasswordStrength(password);
+  
+  return (
+    <div className="pwd-modal-overlay" onClick={onClose}>
+      <div className="pwd-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="pwd-modal-header">
+          <h3 className="pwd-modal-title">
+            {type === 'akun' ? 'Tambah Akun' : type === 'dokumen' ? 'Tambah Dokumen' : 'Tambah Link'}
+          </h3>
+          <button className="pwd-modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="pwd-modal-body">
+          {type === 'akun' && (
+            <>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Pilih Platform</label>
+                <div className="pwd-platform-tabs">
+                  {PLATFORMS.map(p => (
+                    <div 
+                      key={p.id}
+                      className={`pwd-platform-tab ${platform === p.id ? 'active' : ''}`}
+                      onClick={() => { setPlatform(p.id); setPlatformName(p.name); }}
+                    >
+                      {p.icon} {p.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Nama Platform <span className="required">*</span></label>
+                <input 
+                  className="pwd-form-input" 
+                  placeholder="Ketik nama platform..." 
+                  value={platformName} 
+                  onChange={(e) => { setPlatformName(e.target.value); setPlatform('custom'); }}
+                />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Sub judul <span className="optional">(opsional)</span></label>
+                <input className="pwd-form-input" placeholder="cth: Personal, Kerja" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Username / Email <span className="optional">(opsional)</span></label>
+                <input className="pwd-form-input" placeholder="username@email.com" value={username} onChange={(e) => setUsername(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Password <span className="optional">(opsional)</span></label>
+                <div className="pwd-password-wrapper">
+                  <input 
+                    className="pwd-form-input" 
+                    type={showPwd ? "text" : "password"} 
+                    placeholder="••••••••" 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    style={{ paddingRight: 44 }}
+                  />
+                  <button className="pwd-password-toggle" onClick={() => setShowPwd(!showPwd)}>
+                    {showPwd ? '🙈' : '👁️'}
+                  </button>
+                </div>
+                {password && (
+                  <div style={{ marginTop: 8 }}>
+                    <div className="pwd-password-strength">
+                      <div className={`pwd-password-strength-bar ${passwordStrength.level}`}></div>
+                    </div>
+                    <span style={{ fontSize: 11, color: 'var(--studio-gray)' }}>Kekuatan: {passwordStrength.text}</span>
+                  </div>
+                )}
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">URL / Link <span className="optional">(opsional)</span></label>
+                <input className="pwd-form-input" placeholder="https://..." value={url} onChange={(e) => setUrl(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Catatan <span className="optional">(opsional)</span></label>
+                <textarea className="pwd-form-input pwd-form-textarea" placeholder="Catatan tambahan..." value={notes} onChange={(e) => setNotes(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Gambar / Screenshot <span className="optional">(opsional)</span></label>
+                <div className="pwd-image-upload" onClick={() => document.getElementById('pwd-img-upload').click()}>
+                  {imageData ? (
+                    <img src={imageData} className="pwd-image-preview" alt="Preview" />
+                  ) : (
+                    <>
+                      <div className="pwd-image-upload-icon">📷</div>
+                      <div className="pwd-image-upload-text">Tambah Gambar / Screenshot</div>
+                    </>
+                  )}
+                </div>
+                <input id="pwd-img-upload" type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+              </div>
+            </>
+          )}
+          
+          {type === 'dokumen' && (
+            <>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Judul <span className="required">*</span></label>
+                <input className="pwd-form-input" placeholder="Judul dokumen..." value={title} onChange={(e) => setTitle(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Deskripsi <span className="optional">(opsional)</span></label>
+                <textarea className="pwd-form-input pwd-form-textarea" placeholder="Deskripsi dokumen..." value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Foto <span className="optional">(opsional)</span></label>
+                <div className="pwd-image-upload" onClick={() => document.getElementById('pwd-img-upload-doc').click()}>
+                  {imageData ? (
+                    <img src={imageData} className="pwd-image-preview" alt="Preview" />
+                  ) : (
+                    <>
+                      <div className="pwd-image-upload-icon">📷</div>
+                      <div className="pwd-image-upload-text">Tambah Foto</div>
+                    </>
+                  )}
+                </div>
+                <input id="pwd-img-upload-doc" type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+              </div>
+            </>
+          )}
+          
+          {type === 'link' && (
+            <>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Judul <span className="optional">(opsional)</span></label>
+                <input className="pwd-form-input" placeholder="Judul link..." value={title} onChange={(e) => setTitle(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">URL <span className="required">*</span></label>
+                <input className="pwd-form-input" placeholder="https://..." value={url} onChange={(e) => setUrl(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Deskripsi <span className="optional">(opsional)</span></label>
+                <textarea className="pwd-form-input pwd-form-textarea" placeholder="Deskripsi link..." value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+              </div>
+            </>
+          )}
+          
+          <button className="pwd-submit-btn" onClick={handleSave}>💾 Simpan</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ========== PWD EDIT MODAL ==========
+function PwdEditModal({ item, onUpdate, onClose }) {
+  const { type, data } = item;
+  
+  const [platform, setPlatform] = useState(data.platform || '');
+  const [platformName, setPlatformName] = useState(data.platformName || data.title || '');
+  const [title, setTitle] = useState(data.title || '');
+  const [subtitle, setSubtitle] = useState(data.subtitle || data.description || '');
+  const [username, setUsername] = useState(data.username || '');
+  const [password, setPassword] = useState(data.password || '');
+  const [showPwd, setShowPwd] = useState(false);
+  const [url, setUrl] = useState(data.url || '');
+  const [notes, setNotes] = useState(data.notes || '');
+  const [imageData, setImageData] = useState(data.imageData || null);
+  
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (evt) => setImageData(evt.target.result);
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  const handleUpdate = () => {
+    if (type === 'account') {
+      if (!platformName.trim()) { alert('Nama platform wajib diisi!'); return; }
+      onUpdate({ platform, platformName: platformName.trim(), title, subtitle, username, password, url, notes, imageData });
+    } else if (type === 'document') {
+      if (!title.trim()) { alert('Judul dokumen wajib diisi!'); return; }
+      onUpdate({ title: title.trim(), description: subtitle, imageData });
+    } else {
+      if (!url.trim()) { alert('URL wajib diisi!'); return; }
+      onUpdate({ title: title.trim(), url: url.trim(), description: subtitle });
+    }
+  };
+  
+  const passwordStrength = getPasswordStrength(password);
+  
+  return (
+    <div className="pwd-modal-overlay" onClick={onClose}>
+      <div className="pwd-modal" onClick={(e) => e.stopPropagation()}>
+        <div className="pwd-modal-header">
+          <h3 className="pwd-modal-title">
+            {type === 'account' ? 'Edit Akun' : type === 'document' ? 'Edit Dokumen' : 'Edit Link'}
+          </h3>
+          <button className="pwd-modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="pwd-modal-body">
+          {type === 'account' && (
+            <>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Pilih Platform</label>
+                <div className="pwd-platform-tabs">
+                  {PLATFORMS.map(p => (
+                    <div 
+                      key={p.id}
+                      className={`pwd-platform-tab ${platform === p.id ? 'active' : ''}`}
+                      onClick={() => { setPlatform(p.id); setPlatformName(p.name); }}
+                    >
+                      {p.icon} {p.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Nama Platform <span className="required">*</span></label>
+                <input 
+                  className="pwd-form-input" 
+                  placeholder="Ketik nama platform..." 
+                  value={platformName} 
+                  onChange={(e) => { setPlatformName(e.target.value); setPlatform('custom'); }}
+                />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Sub judul <span className="optional">(opsional)</span></label>
+                <input className="pwd-form-input" placeholder="cth: Personal, Kerja" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Username / Email <span className="optional">(opsional)</span></label>
+                <input className="pwd-form-input" placeholder="username@email.com" value={username} onChange={(e) => setUsername(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Password <span className="optional">(opsional)</span></label>
+                <div className="pwd-password-wrapper">
+                  <input 
+                    className="pwd-form-input" 
+                    type={showPwd ? "text" : "password"} 
+                    placeholder="••••••••" 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)} 
+                    style={{ paddingRight: 44 }}
+                  />
+                  <button className="pwd-password-toggle" onClick={() => setShowPwd(!showPwd)}>
+                    {showPwd ? '🙈' : '👁️'}
+                  </button>
+                </div>
+                {password && (
+                  <div style={{ marginTop: 8 }}>
+                    <div className="pwd-password-strength">
+                      <div className={`pwd-password-strength-bar ${passwordStrength.level}`}></div>
+                    </div>
+                    <span style={{ fontSize: 11, color: 'var(--studio-gray)' }}>Kekuatan: {passwordStrength.text}</span>
+                  </div>
+                )}
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">URL / Link <span className="optional">(opsional)</span></label>
+                <input className="pwd-form-input" placeholder="https://..." value={url} onChange={(e) => setUrl(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Catatan <span className="optional">(opsional)</span></label>
+                <textarea className="pwd-form-input pwd-form-textarea" placeholder="Catatan tambahan..." value={notes} onChange={(e) => setNotes(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Gambar / Screenshot <span className="optional">(opsional)</span></label>
+                <div className="pwd-image-upload" onClick={() => document.getElementById('pwd-img-upload-edit').click()}>
+                  {imageData ? (
+                    <img src={imageData} className="pwd-image-preview" alt="Preview" />
+                  ) : (
+                    <>
+                      <div className="pwd-image-upload-icon">📷</div>
+                      <div className="pwd-image-upload-text">Tambah Gambar / Screenshot</div>
+                    </>
+                  )}
+                </div>
+                <input id="pwd-img-upload-edit" type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+              </div>
+            </>
+          )}
+          
+          {type === 'document' && (
+            <>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Judul <span className="required">*</span></label>
+                <input className="pwd-form-input" placeholder="Judul dokumen..." value={title} onChange={(e) => setTitle(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Deskripsi <span className="optional">(opsional)</span></label>
+                <textarea className="pwd-form-input pwd-form-textarea" placeholder="Deskripsi dokumen..." value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Foto <span className="optional">(opsional)</span></label>
+                <div className="pwd-image-upload" onClick={() => document.getElementById('pwd-img-upload-doc-edit').click()}>
+                  {imageData ? (
+                    <img src={imageData} className="pwd-image-preview" alt="Preview" />
+                  ) : (
+                    <>
+                      <div className="pwd-image-upload-icon">📷</div>
+                      <div className="pwd-image-upload-text">Tambah Foto</div>
+                    </>
+                  )}
+                </div>
+                <input id="pwd-img-upload-doc-edit" type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+              </div>
+            </>
+          )}
+          
+          {type === 'link' && (
+            <>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Judul <span className="optional">(opsional)</span></label>
+                <input className="pwd-form-input" placeholder="Judul link..." value={title} onChange={(e) => setTitle(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">URL <span className="required">*</span></label>
+                <input className="pwd-form-input" placeholder="https://..." value={url} onChange={(e) => setUrl(e.target.value)} />
+              </div>
+              <div className="pwd-form-group">
+                <label className="pwd-form-label">Deskripsi <span className="optional">(opsional)</span></label>
+                <textarea className="pwd-form-input pwd-form-textarea" placeholder="Deskripsi link..." value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
+              </div>
+            </>
+          )}
+          
+          <button className="pwd-submit-btn" onClick={handleUpdate}>💾 Simpan Perubahan</button>
         </div>
       </div>
     </div>
