@@ -418,7 +418,7 @@ function ConfigSetup({ onSave, existingConfig }) {
   });
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
-  const [toast, showToast] = useToast();
+  const [showToast, toast] = useToast();
 
   const handleChange = (field, value) => {
     setConfig({ ...config, [field]: value });
@@ -602,7 +602,7 @@ function ConfigSetup({ onSave, existingConfig }) {
 // ========== MAIN APP ==========
 function App() {
   const [navOpen, setNavOpen] = useState(false);
-  const [toast, showToast] = useToast();
+  const [showToast, toast] = useToast();
   const [showSettings, setShowSettings] = useState(false);
   const [showFirebaseSettings, setShowFirebaseSettings] = useState(false);
   
